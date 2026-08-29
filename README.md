@@ -9,6 +9,20 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
 - **Menú Principal y Centro de Herramientas (Audio Hub)**:
   - Pantalla principal dedicada que centraliza todas las utilidades del laboratorio de audio con navegación fluida y soporte para botón atrás nativo.
   - Tarjetas detalladas de cada herramienta con título, descripción, insignias de estado y accesos directos.
+  - Tarjeta de acceso directo y gestión de **Carpetas en tu Almacenamiento**.
+
+- **Sistema de Carpetas Accesibles para el Usuario (Almacenamiento Organizado)**:
+  - Organización automática de todos los archivos generados en una estructura de carpetas visibles y accesibles desde cualquier gestor de archivos (Google Files, Xiaomi, Samsung, Solid Explorer, etc.):
+    ```
+    📁 Almacenamiento / Música / AudioConverter (Carpeta principal con el nombre provisional de la app)
+      ├── 📁 Convertir         -> Audios convertidos entre formatos (MP3, WAV, FLAC, M4A, etc.)
+      ├── 📁 Video a Audio     -> Pistas de audio extraídas de videos (MP4, MKV, WebM, etc.)
+      ├── 📁 Recortar          -> Segmentos recortados y tonos de llamada
+      ├── 📁 Fusionar          -> Pistas de audio combinadas
+      └── 📁 Grabaciones       -> Notas de voz y muestras
+    ```
+  - **Indexación Inmediata en MediaStore**: Los audios exportados aparecen al instante en los reproductores de música y galerías del sistema.
+  - **Botón de Exploración Rápida**: Acceso directo desde la interfaz de la app para abrir la carpeta correspondiente en el gestor de archivos.
 
 - **Herramienta "Convertir" (12 formatos soportados)**:
   - **MP3**: Audio universal con compatibilidad total.
@@ -29,7 +43,7 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
   - **Modo Extracción Directa (Ultra Rápida / Sin Pérdida)**: Copia el flujo de audio original en milisegundos sin recodificación si el contenedor y destino lo permiten.
   - **Modo Conversión de Alta Fidelidad**: Transcodifica el audio del video a formatos populares (MP3, AAC, FLAC, WAV, OGG, OPUS) con control de bitrate (hasta 320 kbps) y ajuste de volumen.
   - **Detección Automática de Metadatos de Video**: Análisis inmediato de resolución (1080p, 4K, 720p), miniatura gráfica de fotograma, duración y códec de audio interno.
-  - **Exportación y Compartir**: Guardado directo en la carpeta de Música y envío instantáneo por mensajería.
+  - **Guardado Automático**: Almacenamiento directo en la subcarpeta `Video a Audio` y exportación a la biblioteca pública.
 
 - **Protección de Fidelidad y Bloqueo Anti-Sobremuestreo (Anti-Bloat)**:
   - **Detección automática de metadatos**: Al cargar un archivo, se lee su tasa de bits real y frecuencia de muestreo de origen.
@@ -47,15 +61,16 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
   - Soporte para escuchar tanto el audio de origen como el archivo convertido final.
 
 - **Gestor de Audios y Exportación**:
-  - Historial de archivos convertidos en la pestaña *Mis Audios*.
+  - Historial de archivos convertidos clasificados por herramienta.
   - Opción directa para compartir mediante cualquier aplicación instalada.
-  - Exportación con un toque a la carpeta pública de Música del dispositivo.
+  - Exportación con un toque a la carpeta pública de Música del dispositivo con rutas relativas limpias.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
 - **UI & Framework**: Kotlin + Jetpack Compose + Material Design 3.
+- **Gestión de Almacenamiento**: `AppStorageManager` + `MediaStore API (Scoped Storage)` + `FileProvider`.
 - **Motor Nativo C++**: Android NDK + CMake (`libnative_audio_engine.so`) con puente JNI.
 - **Motor Rust DSP**: `audio_converter_core` con soporte para decodificación y resampling audiófilo.
 - **Arquitectura**: MVVM (Model-View-ViewModel) + StateFlow reactivo.
@@ -89,4 +104,3 @@ Para ejecutar las pruebas unitarias y de captura de interfaz:
 ```bash
 gradle :app:testDebugUnitTest
 ```
-

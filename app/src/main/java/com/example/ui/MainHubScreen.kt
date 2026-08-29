@@ -32,6 +32,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Memory
@@ -45,6 +47,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -57,10 +60,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.audio.AppAudioFolder
+import com.example.audio.AppStorageManager
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -157,6 +163,16 @@ fun MainHubScreen(
           tags = listOf("MP4/MKV a MP3", "Extracción Directa", "Zero Pérdida", "Ajuste de Ganancia"),
           onClick = onNavigateToVideoExtractor,
           testTag = "tool_card_video_extractor"
+        )
+      }
+
+      // Section: Carpetas en tu Almacenamiento
+      item {
+        val context = LocalContext.current
+        StorageFoldersCard(
+          onOpenFolder = { folder ->
+            AppStorageManager.openFolderInFileManager(context, folder)
+          }
         )
       }
 
@@ -607,6 +623,126 @@ private fun UpcomingToolCard(
           ),
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+      }
+    }
+  }
+}
+
+@Composable
+private fun StorageFoldersCard(
+  onOpenFolder: (AppAudioFolder) -> Unit
+) {
+  Card(
+    shape = RoundedCornerShape(20.dp),
+    colors = CardDefaults.cardColors(
+      containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    ),
+    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+    modifier = Modifier.fillMaxWidth()
+  ) {
+    Column(modifier = Modifier.padding(16.dp)) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(36.dp)
+              .clip(RoundedCornerShape(10.dp))
+              .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Default.Folder,
+              contentDescription = "Carpetas",
+              tint = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.size(20.dp)
+            )
+          }
+          Column {
+            Text(
+              text = "Carpetas en tu Almacenamiento",
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+              text = "Música / AudioConverter /",
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.primary
+            )
+          }
+        }
+      }
+
+      Spacer(modifier = Modifier.height(12.dp))
+
+      Text(
+        text = "Tus archivos se organizan automáticamente en subcarpetas accesibles desde cualquier gestor de archivos:",
+        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+      )
+
+      Spacer(modifier = Modifier.height(10.dp))
+
+      AppAudioFolder.values().take(3).forEach { folder ->
+        Surface(
+          shape = RoundedCornerShape(10.dp),
+          color = MaterialTheme.colorScheme.surface,
+          border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+            .clickable { onOpenFolder(folder) }
+        ) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.FolderOpen,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(18.dp)
+              )
+              Column {
+                Text(
+                  text = "📁 ${folder.folderName}",
+                  style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                  color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                  text = folder.description,
+                  style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+              }
+            }
+
+            IconButton(
+              onClick = { onOpenFolder(folder) },
+              modifier = Modifier.size(28.dp)
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Explorar",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+              )
+            }
+          }
+        }
       }
     }
   }

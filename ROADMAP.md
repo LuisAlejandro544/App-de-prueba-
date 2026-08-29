@@ -18,19 +18,22 @@ Este documento describe las fases de evolución técnica y funcional del proyect
 
 ---
 
-## 📍 Fase 2: Extractor de Audio de Video y Motor Nativo (Completada ✅)
+## 📍 Fase 2: Extractor de Video, Motor Nativo y Almacenamiento Organizado (Completada ✅)
 - [x] **Herramienta: Extractor de Audio desde Video** (MP4, MKV, WebM, MOV, AVI a MP3/AAC/WAV/FLAC/OGG/OPUS).
 - [x] **Modo Extracción Directa (Ultra Rápida / Passthrough)** sin recodificación para contenedores compatibles.
 - [x] **Modo Conversión de Alta Fidelidad** con control de bitrate (hasta 320 kbps), calidad y ganancia de volumen.
 - [x] Análisis automático de metadatos de video (resolución, duración, miniatura de fotograma, códec de audio interno).
-- [x] Generador de video de muestra para pruebas inmediatas en dispositivo.
 - [x] Integración de llamadas nativas C++ (FFmpeg Core JNI) y Rust Bridge para demuxing y extracción de audio.
+- [x] **Sistema de Carpetas Accesibles en Almacenamiento**:
+  - Estructura automática `AudioConverter/` con subcarpetas `Convertir/`, `Video a Audio/`, `Recortar/`, `Fusionar/`, `Grabaciones/`.
+  - Integración transparente con `MediaStore` (Scoped Storage) para visibilidad inmediata en exploradores de archivos y reproductores.
+  - Accesos directos y botones de exploración de carpetas desde la interfaz.
 
 ---
 
 ## 📍 Fase 3: Edición y Herramientas Acústicas Avanzadas (En Progreso 🚧)
-- [ ] Recortador visual de audio con selección de puntos de inicio y fin sobre la onda sonora y creador de tonos.
-- [ ] Unión / Fusión de múltiples pistas de audio en un único archivo.
+- [ ] Recortador visual de audio con selección de puntos de inicio y fin sobre la onda sonora y creador de tonos (carpeta `Recortar/`).
+- [ ] Unión / Fusión de múltiples pistas de audio en un único archivo (carpeta `Fusionar/`).
 - [ ] Ecualizador gráfico paramétrico de 10 bandas y refuerzo de graves (*Bass Boost*).
 - [ ] Editor de etiquetas ID3 / Metadatos (Título, Artista, Álbum, Año, Portada del álbum embebida).
 - [ ] Conversión en segundo plano mediante `WorkManager` y notificación persistente en la barra de estado.

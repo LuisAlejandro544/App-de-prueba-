@@ -1,0 +1,61 @@
+name: Guardar y Confirmar Cambios (Git Commit & Push)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: 'Mensaje del commit (dejar vacío para usar commit_message.txt)'
+        required: false
+        default: ''
+        type: string
+      branch_name:
+        description: 'Rama destino'
+        required: true
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  commit-and-push:
+    name: Confirmar y Guardar Cambios
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch_name }}
+          fetch-depth: 0
+
+      - name: ⚙️ Configurar identidad de Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 📝 Determinar mensaje de commit
+        id: get_msg
+        run: |
+          if [ -n "${{ inputs.commit_message }}" ]; then
+            echo "MSG<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ inputs.commit_message }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          elif [ -f "commit_message.txt" ]; then
+            echo "MSG<<EOF" >> $GITHUB_OUTPUT
+            cat commit_message.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "MSG<<EOF" >> $GITHUB_OUTPUT
+            echo "chore: Actualización automática de código y recursos" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚀 Agregar cambios y realizar commit
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No hay cambios pendientes por confirmar."
+          else
+            git commit -m "${{ steps.get_msg.outputs.MSG }}"
+            git push origin ${{ inputs.branch_name }}
+          fi

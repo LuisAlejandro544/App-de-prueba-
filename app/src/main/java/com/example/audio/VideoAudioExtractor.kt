@@ -43,7 +43,7 @@ object VideoAudioExtractor {
     try {
       onProgress(0.05f, "Preparando contenedor de video...")
 
-      val outputDir = File(context.filesDir, "extracted_audio").apply { mkdirs() }
+      val outputDir = AppStorageManager.getFolder(context, AppAudioFolder.VIDEO_A_AUDIO)
       val targetFormat = options.targetFormat
 
       val sanitizedBaseName = if (options.customFileName.isNotBlank()) {

@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,6 +86,7 @@ fun AudioConverterScreen(
   viewModel: AudioConverterViewModel = viewModel(),
   onNavigateBack: (() -> Unit)? = null
 ) {
+  val context = LocalContext.current
   val selectedAudio by viewModel.selectedAudio.collectAsState()
   val conversionOptions by viewModel.conversionOptions.collectAsState()
   val conversionProgress by viewModel.conversionProgress.collectAsState()
@@ -151,7 +153,9 @@ fun AudioConverterScreen(
             onShareFile = { viewModel.shareAudioFile(it) },
             onExportFile = { viewModel.exportToDeviceMusic(it) },
             onDeleteFile = { viewModel.deleteConvertedFile(it) },
-            onGoToConverter = { viewModel.setTab(0) }
+            onGoToConverter = { viewModel.setTab(0) },
+            onOpenFolder = { viewModel.openOutputFolder(context) },
+            folderDisplayPath = "Música / AudioConverter / Convertir"
           )
         }
       }

@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,6 +41,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.Info
@@ -274,6 +277,60 @@ fun VideoToAudioScreen(
       // 6. Historial de audios extraídos
       if (history.isNotEmpty()) {
         item {
+          Spacer(modifier = Modifier.height(10.dp))
+          
+          Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+          ) {
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Folder,
+                  contentDescription = "Carpeta de almacenamiento",
+                  tint = MaterialTheme.colorScheme.primary,
+                  modifier = Modifier.size(20.dp)
+                )
+                Column {
+                  Text(
+                    text = "Carpeta de destino",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                  )
+                  Text(
+                    text = "Música / AudioConverter / Video a Audio",
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSurface
+                  )
+                }
+              }
+
+              IconButton(
+                onClick = { viewModel.openOutputFolder(context) },
+                modifier = Modifier.size(36.dp).testTag("btn_open_video_folder")
+              ) {
+                Icon(
+                  imageVector = Icons.Default.FolderOpen,
+                  contentDescription = "Abrir carpeta en el explorador",
+                  tint = MaterialTheme.colorScheme.primary,
+                  modifier = Modifier.size(20.dp)
+                )
+              }
+            }
+          }
+
           Spacer(modifier = Modifier.height(10.dp))
           Row(
             modifier = Modifier.fillMaxWidth(),

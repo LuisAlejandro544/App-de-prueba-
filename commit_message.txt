@@ -1,0 +1,17 @@
+feat: Sistema de almacenamiento organizado y carpetas accesibles para el usuario
+
+- Implementado `AppStorageManager` para gestionar la estructura de carpetas accesible en el almacenamiento del dispositivo:
+  * 📁 AudioConverter (Directorio raíz provisional de la aplicación en Música / Almacenamiento Compartido)
+  * 📁 AudioConverter/Convertir (Audios procesados por la herramienta de conversión: MP3, WAV, FLAC, M4A, etc.)
+  * 📁 AudioConverter/Video a Audio (Pistas de audio extraídas de contenedores de video: MP4, MKV, WebM)
+  * 📁 AudioConverter/Recortar (Segmentos y tonos de llamada preparados para la próxima herramienta)
+  * 📁 AudioConverter/Fusionar (Pistas combinadas preparadas para la próxima herramienta)
+  * 📁 AudioConverter/Grabaciones (Muestras locales y notas de voz)
+- Integración nativa con `MediaStore` (Scoped Storage en Android 10+) para indexación inmediata de archivos de audio en reproductores y exploradores del sistema.
+- Compatibilidad con `FileProvider` para abrir las carpetas directamente en cualquier explorador de archivos del sistema desde la aplicación.
+- Actualizada la interfaz de usuario con tarjetas informativas de carpetas de destino y botones de acceso directo en:
+  * `MainHubScreen` (Tarjeta central de carpetas en almacenamiento)
+  * `AudioConverterScreen` (Indicador de destino y acceso a /Convertir)
+  * `VideoToAudioScreen` (Indicador de destino y acceso a /Video a Audio)
+- Migración y retrocompatibilidad automática de archivos convertidos previos hacia las nuevas subcarpetas.
+- Actualizados todos los documentos de referencia (`README.md`, `STRUCTURE.md`, `AI_CONTEXT.md`, `ROADMAP.md`).

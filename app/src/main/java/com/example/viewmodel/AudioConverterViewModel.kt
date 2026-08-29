@@ -12,6 +12,8 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.audio.AppAudioFolder
+import com.example.audio.AppStorageManager
 import com.example.audio.AudioMetadataReader
 import com.example.audio.AudioPlayerManager
 import com.example.audio.AudioTranscoder
@@ -220,14 +222,23 @@ class AudioConverterViewModel(application: Application) : AndroidViewModel(appli
 
   fun loadSavedFiles() {
     viewModelScope.launch(Dispatchers.IO) {
-      val outputDir = File(getApplication<Application>().filesDir, "converted")
-      if (!outputDir.exists()) {
-        outputDir.mkdirs()
-        _convertedFiles.value = emptyList()
-        return@launch
+      val convertFolder = AppStorageManager.getFolder(getApplication(), AppAudioFolder.CONVERTIR)
+      val legacyDir = File(getApplication<Application>().filesDir, "converted")
+
+      // Mover archivos legacy si existen a la nueva subcarpeta accesible
+      if (legacyDir.exists()) {
+        legacyDir.listFiles()?.forEach { legacyFile ->
+          if (legacyFile.isFile) {
+            val dest = File(convertFolder, legacyFile.name)
+            if (!dest.exists()) {
+              legacyFile.copyTo(dest, overwrite = true)
+            }
+            legacyFile.delete()
+          }
+        }
       }
 
-      val files = outputDir.listFiles() ?: emptyArray()
+      val files = convertFolder.listFiles() ?: emptyArray()
       val items = files.filter { it.isFile && it.length() > 0 }.map { file ->
         val ext = file.extension.lowercase()
         val format = AudioFormat.values().find { it.extension == ext } ?: AudioFormat.MP3
@@ -248,6 +259,10 @@ class AudioConverterViewModel(application: Application) : AndroidViewModel(appli
 
       _convertedFiles.value = items
     }
+  }
+
+  fun openOutputFolder(context: Context) {
+    AppStorageManager.openFolderInFileManager(context, AppAudioFolder.CONVERTIR)
   }
 
   fun deleteConvertedFile(item: ConvertedAudioFile) {
@@ -293,46 +308,17 @@ class AudioConverterViewModel(application: Application) : AndroidViewModel(appli
   fun exportToDeviceMusic(item: ConvertedAudioFile) {
     viewModelScope.launch(Dispatchers.IO) {
       val context = getApplication<Application>()
-      var success = false
-      try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-          val values = ContentValues().apply {
-            put(MediaStore.Audio.Media.DISPLAY_NAME, item.name)
-            put(MediaStore.Audio.Media.MIME_TYPE, item.format.mimeType)
-            put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC + "/AudioStudio")
-            put(MediaStore.Audio.Media.IS_PENDING, 1)
-          }
-
-          val uri = context.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-          if (uri != null) {
-            context.contentResolver.openOutputStream(uri)?.use { out ->
-              FileInputStream(item.file).use { input ->
-                input.copyTo(out)
-              }
-            }
-            values.clear()
-            values.put(MediaStore.Audio.Media.IS_PENDING, 0)
-            context.contentResolver.update(uri, values, null, null)
-            success = true
-          }
-        } else {
-          val musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-          val appMusicDir = File(musicDir, "AudioStudio").apply { mkdirs() }
-          val destFile = File(appMusicDir, item.name)
-          FileInputStream(item.file).use { input ->
-            FileOutputStream(destFile).use { out ->
-              input.copyTo(out)
-            }
-          }
-          success = true
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
+      val success = AppStorageManager.exportToPublicMusicFolder(
+        context = context,
+        sourceFile = item.file,
+        mimeType = item.format.mimeType,
+        folderType = AppAudioFolder.CONVERTIR,
+        customDisplayName = item.name
+      )
 
       withContext(Dispatchers.Main) {
         if (success) {
-          Toast.makeText(context, "Archivo guardado en la carpeta Música / AudioStudio", Toast.LENGTH_LONG).show()
+          Toast.makeText(context, "Archivo guardado en: ${AppStorageManager.getDisplayPath(context, AppAudioFolder.CONVERTIR)}", Toast.LENGTH_LONG).show()
         } else {
           Toast.makeText(context, "No se pudo exportar a la carpeta pública", Toast.LENGTH_SHORT).show()
         }

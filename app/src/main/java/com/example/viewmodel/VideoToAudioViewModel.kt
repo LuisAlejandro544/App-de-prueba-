@@ -12,6 +12,9 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.audio.AppAudioFolder
+import com.example.audio.AppStorageManager
+import com.example.audio.AudioMetadataReader
 import com.example.audio.AudioPlayerManager
 import com.example.audio.PlaybackState
 import com.example.audio.VideoAudioExtractor
@@ -24,12 +27,14 @@ import com.example.model.VideoExtractionOptions
 import com.example.model.VideoExtractionProgress
 import com.example.model.VideoExtractionState
 import com.example.model.VideoFileInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 
@@ -54,6 +59,51 @@ class VideoToAudioViewModel(application: Application) : AndroidViewModel(applica
   val extractedHistory: StateFlow<List<ConvertedAudioFile>> = _extractedHistory.asStateFlow()
 
   private var extractionJob: Job? = null
+
+  init {
+    loadExtractedHistory()
+  }
+
+  fun loadExtractedHistory() {
+    viewModelScope.launch(Dispatchers.IO) {
+      val videoAudioFolder = AppStorageManager.getFolder(getApplication(), AppAudioFolder.VIDEO_A_AUDIO)
+      val legacyDir = File(getApplication<Application>().filesDir, "extracted_audio")
+
+      // Mover archivos legacy si existen
+      if (legacyDir.exists()) {
+        legacyDir.listFiles()?.forEach { legacyFile ->
+          if (legacyFile.isFile) {
+            val dest = File(videoAudioFolder, legacyFile.name)
+            if (!dest.exists()) {
+              legacyFile.copyTo(dest, overwrite = true)
+            }
+            legacyFile.delete()
+          }
+        }
+      }
+
+      val files = videoAudioFolder.listFiles() ?: emptyArray()
+      val items = files.filter { it.isFile && it.length() > 0 }.map { file ->
+        val ext = file.extension.lowercase()
+        val format = AudioFormat.values().find { it.extension == ext } ?: AudioFormat.MP3
+        val meta = AudioMetadataReader.readMetadata(getApplication(), Uri.fromFile(file))
+        ConvertedAudioFile(
+          id = file.absolutePath,
+          file = file,
+          name = file.name,
+          format = format,
+          sizeBytes = file.length(),
+          durationMs = meta?.durationMs ?: 0L,
+          timestamp = file.lastModified(),
+          sampleRate = meta?.sampleRate ?: 44100,
+          channels = meta?.channelCount ?: 2,
+          bitrateKbps = meta?.bitrateKbps ?: 192
+        )
+      }.sortedByDescending { it.timestamp }
+
+      _extractedHistory.value = items
+    }
+  }
 
   fun selectVideo(context: Context, uri: Uri) {
     _isAnalyzing.value = true
@@ -197,40 +247,27 @@ class VideoToAudioViewModel(application: Application) : AndroidViewModel(applica
   }
 
   fun saveToMusicFolder(context: Context, file: ConvertedAudioFile) {
-    viewModelScope.launch {
-      try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-          val values = ContentValues().apply {
-            put(MediaStore.Audio.Media.DISPLAY_NAME, file.name)
-            put(MediaStore.Audio.Media.MIME_TYPE, file.format.mimeType)
-            put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC + "/AudioConverter")
-            put(MediaStore.Audio.Media.IS_PENDING, 1)
-          }
+    viewModelScope.launch(Dispatchers.IO) {
+      val success = AppStorageManager.exportToPublicMusicFolder(
+        context = context,
+        sourceFile = file.file,
+        mimeType = file.format.mimeType,
+        folderType = AppAudioFolder.VIDEO_A_AUDIO,
+        customDisplayName = file.name
+      )
 
-          val uri = context.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-          if (uri != null) {
-            context.contentResolver.openOutputStream(uri)?.use { out ->
-              FileInputStream(file.file).use { input ->
-                input.copyTo(out)
-              }
-            }
-            values.clear()
-            values.put(MediaStore.Audio.Media.IS_PENDING, 0)
-            context.contentResolver.update(uri, values, null, null)
-            Toast.makeText(context, "Guardado en Carpeta Música/AudioConverter", Toast.LENGTH_LONG).show()
-          }
+      withContext(Dispatchers.Main) {
+        if (success) {
+          Toast.makeText(context, "Guardado en: ${AppStorageManager.getDisplayPath(context, AppAudioFolder.VIDEO_A_AUDIO)}", Toast.LENGTH_LONG).show()
         } else {
-          val musicDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "AudioConverter")
-          musicDir.mkdirs()
-          val destFile = File(musicDir, file.name)
-          file.file.copyTo(destFile, overwrite = true)
-          Toast.makeText(context, "Guardado en ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+          Toast.makeText(context, "Error al exportar a la carpeta pública", Toast.LENGTH_SHORT).show()
         }
-      } catch (e: Exception) {
-        e.printStackTrace()
-        Toast.makeText(context, "Error al exportar: ${e.message}", Toast.LENGTH_SHORT).show()
       }
     }
+  }
+
+  fun openOutputFolder(context: Context) {
+    AppStorageManager.openFolderInFileManager(context, AppAudioFolder.VIDEO_A_AUDIO)
   }
 
   fun togglePlayFile(context: Context, file: ConvertedAudioFile) {

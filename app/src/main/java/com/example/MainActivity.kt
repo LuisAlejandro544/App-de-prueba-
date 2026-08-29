@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.example.audio.AppStorageManager
 import com.example.ui.AudioConverterScreen
 import com.example.ui.MainHubScreen
 import com.example.ui.VideoToAudioScreen
@@ -34,6 +35,10 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    
+    // Crear jerarquía de carpetas accesibles en el almacenamiento
+    AppStorageManager.ensureAllFoldersExist(this)
+
     setContent {
       MyApplicationTheme {
         Surface(modifier = Modifier.fillMaxSize()) {

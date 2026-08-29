@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -62,6 +63,8 @@ fun ConvertedFilesList(
   onExportFile: (ConvertedAudioFile) -> Unit,
   onDeleteFile: (ConvertedAudioFile) -> Unit,
   onGoToConverter: () -> Unit,
+  onOpenFolder: (() -> Unit)? = null,
+  folderDisplayPath: String = "Música / AudioConverter / Convertir",
   modifier: Modifier = Modifier
 ) {
   if (files.isEmpty()) {
@@ -153,6 +156,63 @@ fun ConvertedFilesList(
     verticalArrangement = Arrangement.spacedBy(12.dp)
   ) {
     item {
+      Spacer(modifier = Modifier.height(4.dp))
+      
+      // Tarjeta informativa de la carpeta del almacenamiento accesible
+      Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+      ) {
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+          Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.Folder,
+              contentDescription = "Carpeta de almacenamiento",
+              tint = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.size(20.dp)
+            )
+            Column {
+              Text(
+                text = "Carpeta de destino",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Text(
+                text = folderDisplayPath,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface
+              )
+            }
+          }
+
+          if (onOpenFolder != null) {
+            IconButton(
+              onClick = onOpenFolder,
+              modifier = Modifier.size(36.dp).testTag("btn_open_folder")
+            ) {
+              Icon(
+                imageVector = Icons.Default.FolderOpen,
+                contentDescription = "Abrir carpeta en el explorador",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+              )
+            }
+          }
+        }
+      }
+
       Spacer(modifier = Modifier.height(8.dp))
       Text(
         text = "${files.size} ${if (files.size == 1) "archivo convertido" else "archivos convertidos"}",

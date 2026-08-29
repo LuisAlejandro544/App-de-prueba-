@@ -45,7 +45,7 @@ object AudioTranscoder {
     try {
       onProgress(0.05f, "Preparando archivo de audio...")
 
-      val outputDir = File(context.filesDir, "converted").apply { mkdirs() }
+      val outputDir = AppStorageManager.getFolder(context, AppAudioFolder.CONVERTIR)
       val targetFormat = options.targetFormat
 
       val sanitizedBaseName = if (options.customFileName.isNotBlank()) {
