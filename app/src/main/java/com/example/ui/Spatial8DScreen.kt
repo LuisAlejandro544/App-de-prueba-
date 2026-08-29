@@ -69,7 +69,6 @@ fun Spatial8DScreen(
   val progress by viewModel.progress.collectAsState()
   val history by viewModel.convertedHistory.collectAsState()
   val playbackState by viewModel.playbackState.collectAsState()
-  val isLoadingSample by viewModel.isLoadingSample.collectAsState()
 
   var customNameInput by remember { mutableStateOf("") }
 
@@ -162,10 +161,8 @@ fun Spatial8DScreen(
         SpatialAudioSourceCard(
           selectedUri = selectedUri,
           audioMetadata = audioMetadata,
-          isLoadingSample = isLoadingSample,
           playbackState = playbackState,
           onPickAudio = { audioPickerLauncher.launch("audio/*") },
-          onGenerateSample = { viewModel.generateSampleAudio() },
           onTogglePlayOriginal = { viewModel.togglePlayOriginal() }
         )
       }

@@ -27,6 +27,8 @@ import java.io.FileOutputStream
  */
 enum class AppAudioFolder(val folderName: String, val displayName: String, val description: String) {
   CONVERTIR("Convertir", "Convertir", "Audios convertidos a otros formatos (MP3, WAV, FLAC, etc.)"),
+  COMPRIMIR("Comprimir", "Comprimir", "Audios reducidos de tamaño optimizados para compartir y ahorrar espacio"),
+  DIVIDIR("Dividir", "Dividir", "Pistas y segmentos de audio separados automáticamente por silencios"),
   VIDEO_A_AUDIO("Video a Audio", "Video a Audio", "Pistas de audio extraídas de videos"),
   AUDIO_8D("Audio 8D", "Audio 8D", "Audios espaciales 3D / 8D inmersivos con rotación binaural"),
   SIN_SILENCIO("Sin Silencio", "Sin Silencio", "Audios con silencios y pausas eliminadas automáticamente"),

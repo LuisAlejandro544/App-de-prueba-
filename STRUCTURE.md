@@ -13,7 +13,7 @@
 │   │   │   │   ├── ffmpeg_bridge.cpp    # Implementación del motor de transcodificación C++
 │   │   │   │   └── native_audio_engine.cpp # Puntos de entrada JNI hacia Kotlin
 │   │   │   ├── java/com/example/
-│   │   │   │   ├── MainActivity.kt      # Activity principal con navegación hacia Hub, Convertir, Video y Unir
+│   │   │   │   ├── MainActivity.kt      # Activity principal con navegación hacia Hub, Convertir, Comprimir, Video, 8D, Unir y Silencios
 │   │   │   │   ├── audio/               # Servicios de audio, video, almacenamiento y bridges
 │   │   │   │   │   ├── AppStorageManager.kt   # Gestor de carpetas y subcarpetas accesibles en almacenamiento público
 │   │   │   │   │   ├── AudioMetadataReader.kt # Extractor de metadatos y duración de audio
@@ -22,6 +22,7 @@
 │   │   │   │   │   ├── SilenceRemoverProcessor.kt # Motor DSP de detección de energía RMS y corte de silencios
 │   │   │   │   │   ├── Spatial8DAudioProcessor.kt # Motor de audio espacial 8D y DSP holofónico
 │   │   │   │   │   ├── AudioMerger.kt         # Motor de unión acústica de hasta 6 pistas con DSP
+│   │   │   │   │   ├── AudioCompressorProcessor.kt # Motor de compresión y reducción de peso en MB
 │   │   │   │   │   ├── AudioPlayerManager.kt  # Controlador de MediaPlayer y progreso
 │   │   │   │   │   ├── AudioTranscoder.kt     # Orquestador del pipeline de transcodificación
 │   │   │   │   │   ├── NativeAudioBridge.kt   # Conexión JNI con librería C++ / FFmpeg
@@ -32,14 +33,16 @@
 │   │   │   │   │       ├── WavEncoder.kt          # Generador de cabeceras y flujo RIFF WAVE
 │   │   │   │   │       └── MediaCodecEncoder.kt   # Codificador por hardware AAC, FLAC y Opus
 │   │   │   │   ├── model/
-│   │   │   │   │   ├── AudioModels.kt   # Enums y Data Classes para conversión de audio
-│   │   │   │   │   ├── VideoModels.kt   # Modelos para análisis y extracción de video
-│   │   │   │   │   ├── SilenceModels.kt # Modelos para eliminación de silencios (umbrales, modos, métricas)
-│   │   │   │   │   ├── Spatial8DModels.kt # Modelos para audio 8D (trayectorias, presets, LFO)
-│   │   │   │   │   └── MergeModels.kt   # Modelos para unión de pistas, estado y progreso
+│   │   │   │   │   ├── AudioModels.kt       # Enums y Data Classes para conversión de audio
+│   │   │   │   │   ├── CompressorModels.kt  # Modelos para compresión, perfiles y presets
+│   │   │   │   │   ├── VideoModels.kt       # Modelos para análisis y extracción de video
+│   │   │   │   │   ├── SilenceModels.kt     # Modelos para eliminación de silencios
+│   │   │   │   │   ├── Spatial8DModels.kt   # Modelos para audio 8D (trayectorias, presets, LFO)
+│   │   │   │   │   └── MergeModels.kt       # Modelos para unión de pistas, estado y progreso
 │   │   │   │   ├── ui/
 │   │   │   │   │   ├── MainHubScreen.kt         # Menú principal y explorador de carpetas (Orquestador)
 │   │   │   │   │   ├── AudioConverterScreen.kt  # Pantalla de conversión con Tabs y Scaffold (Orquestador)
+│   │   │   │   │   ├── AudioCompressorScreen.kt  # Pantalla de compresión con selector de perfiles y presets (Orquestador)
 │   │   │   │   │   ├── SilenceRemoverScreen.kt  # Pantalla de eliminación inteligente de silencios (Orquestador)
 │   │   │   │   │   ├── VideoToAudioScreen.kt    # Pantalla de extracción de audio desde video
 │   │   │   │   │   ├── Spatial8DScreen.kt       # Pantalla de audio 8D espacial e interactiva (Orquestador)
@@ -52,6 +55,15 @@
 │   │   │   │   │   │   ├── ConvertedFilesList.kt
 │   │   │   │   │   │   ├── FormatSelectorSection.kt
 │   │   │   │   │   │   ├── QualitySelectorSection.kt
+│   │   │   │   │   │   ├── compressor/          # Componentes modulares de Compresión de Audio
+│   │   │   │   │   │   │   ├── CompressorSizeComparisonCard.kt # Comparador de tamaño antes/después
+│   │   │   │   │   │   │   ├── CompressorPresetsCard.kt        # Presets (WhatsApp, Email, Ahorro, Slider MB)
+│   │   │   │   │   │   │   ├── CompressorProfileCard.kt        # Perfiles (Voz, Música, Ahorro Extremo)
+│   │   │   │   │   │   │   └── CompressorProgressDialog.kt     # Diálogo de compresión y reproductor
+│   │   │   │   │   │   ├── split/               # Componentes modulares de Dividir por Silencios
+│   │   │   │   │   │   │   ├── SplitSettingsCard.kt            # Configuración de sensibilidad dB, pausa mínima y ZIP
+│   │   │   │   │   │   │   ├── DetectedTracksPreviewCard.kt    # Vista previa de segmentos, checkboxes y preescucha
+│   │   │   │   │   │   │   └── SplitProgressDialog.kt          # Diálogo de progreso de análisis, exportación y ZIP
 │   │   │   │   │   │   ├── hub/                 # Componentes modulares del Menú Principal
 │   │   │   │   │   │   │   ├── HubModels.kt           # Modos de visualización (Grid, Lista, Detallada) y datos
 │   │   │   │   │   │   │   ├── HubViewModeSelector.kt # Selector de vista con botones de alternancia
@@ -93,10 +105,12 @@
 │   │   │   │   │       ├── Theme.kt
 │   │   │   │   │       └── Type.kt
 │   │   │   │   └── viewmodel/
-│   │   │   │       ├── AudioConverterViewModel.kt # Lógica de negocio de convertidor y storage
-│   │   │   │       ├── VideoToAudioViewModel.kt   # Lógica de negocio de extracción y storage
-│   │   │   │       ├── Spatial8DViewModel.kt      # Lógica de negocio y estado de Audio 8D
-│   │   │   │       └── AudioMergerViewModel.kt    # Lógica de negocio de unión de audios
+│   │   │   │       ├── AudioConverterViewModel.kt  # Lógica de negocio de convertidor y storage
+│   │   │   │       ├── AudioCompressorViewModel.kt  # Lógica de negocio de compresión y storage
+│   │   │   │       ├── SilenceRemoverViewModel.kt  # Lógica de negocio de eliminación de silencios
+│   │   │   │       ├── VideoToAudioViewModel.kt    # Lógica de negocio de extracción y storage
+│   │   │   │       ├── Spatial8DViewModel.kt       # Lógica de negocio y estado de Audio 8D
+│   │   │   │       └── AudioMergerViewModel.kt     # Lógica de negocio de unión de audios
 │   │   │   └── res/                     # Recursos Android (strings, drawables, file_paths.xml)
 │   │   └── test/                        # Pruebas unitarias JVM y Screenshot Tests
 │   └── build.gradle.kts                 # Configuración de Gradle, NDK y dependencias
@@ -127,6 +141,9 @@ La aplicación gestiona automáticamente las siguientes carpetas en el almacenam
 ```
 📁 AudioConverter/                   <- Carpeta raíz pública de la app (en Música / Almacenamiento Externo Público)
   ├── 📁 Convertir/                  <- Audios procesados por la herramienta de conversión (MP3, WAV, FLAC, etc.)
+  ├── 📁 Comprimir/                  <- Audios reducidos y optimizados de tamaño para compartir
+  ├── 📁 Dividir/                    <- Pistas y canciones separadas automáticamente por silencios
+  ├── 📁 Sin Silencio/               <- Audios con pausas y silencios eliminados / acelerados (Smart Cut)
   ├── 📁 Video a Audio/              <- Pistas de audio extraídas de archivos de video
   ├── 📁 Audio 8D/                   <- Audios con efecto espacial 360°, ITD y acústica binaural
   ├── 📁 Fusionar/                   <- Pistas de audio combinadas y unificadas (hasta 6 pistas)

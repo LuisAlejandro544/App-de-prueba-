@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CallSplit
+import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Layers
@@ -55,6 +57,8 @@ import com.example.ui.components.hub.UpcomingToolCard
 @Composable
 fun MainHubScreen(
   onNavigateToConverter: () -> Unit,
+  onNavigateToCompressor: () -> Unit = {},
+  onNavigateToSplitter: () -> Unit = {},
   onNavigateToVideoExtractor: () -> Unit = {},
   onNavigateToSpatial8D: () -> Unit = {},
   onNavigateToSilenceRemover: () -> Unit = {},
@@ -66,6 +70,8 @@ fun MainHubScreen(
 
   val tools = remember(
     onNavigateToConverter,
+    onNavigateToCompressor,
+    onNavigateToSplitter,
     onNavigateToVideoExtractor,
     onNavigateToSpatial8D,
     onNavigateToSilenceRemover,
@@ -76,7 +82,7 @@ fun MainHubScreen(
         id = "converter",
         title = "Convertir",
         subtitle = "Cambiar formato y calidad de audio",
-        description = "Cambia tus canciones y grabaciones a formatos populares como MP3, M4A, WAV o FLAC. Te ayuda a ahorrar espacio, ajustar el volumen y asegurar que tus audios se escuchen en cualquier dispositivo sin perder calidad.",
+        description = "Cambia tus canciones y grabaciones a formatos populares como MP3, M4A, WAV o FLAC. Te ayuda a asegurar compatibilidad, ajustar el volumen y escuchar en cualquier equipo.",
         icon = Icons.Default.Transform,
         badge = "Disponible",
         gradientColors = listOf(Color(0xFF2979FF), Color(0xFF00B0FF)),
@@ -85,12 +91,36 @@ fun MainHubScreen(
         testTag = "tool_card_convert"
       ),
       HubToolItem(
+        id = "compressor",
+        title = "Comprimir",
+        subtitle = "Reduce el tamaño en MB sin perder calidad",
+        description = "Optimiza tus archivos de audio para compartirlos por WhatsApp, Discord o Email sin errores de límite de tamaño. Ahorra hasta un 85% de espacio en memoria con estimador en tiempo real.",
+        icon = Icons.Default.Compress,
+        badge = "Nuevo",
+        gradientColors = listOf(Color(0xFF00BFA5), Color(0xFF00E676)),
+        tags = listOf("WhatsApp (<16MB)", "Email (<25MB)", "Smart Shrink", "Ahorro hasta 85%"),
+        onClick = onNavigateToCompressor,
+        testTag = "tool_card_compressor"
+      ),
+      HubToolItem(
+        id = "splitter",
+        title = "Dividir por Silencios",
+        subtitle = "Separa un audio largo en múltiples pistas",
+        description = "Corta automáticamente grabaciones de sesiones, álbumes o conferencias en pistas individuales según las pausas detectadas. Previsualiza, renombra y empaqueta en ZIP.",
+        icon = Icons.Default.CallSplit,
+        badge = "Nuevo",
+        gradientColors = listOf(Color(0xFF7C4DFF), Color(0xFF651FFF)),
+        tags = listOf("Auto-Chunker", "Múltiples Pistas", "Exportar ZIP", "Preescucha"),
+        onClick = onNavigateToSplitter,
+        testTag = "tool_card_splitter"
+      ),
+      HubToolItem(
         id = "silence_remover",
         title = "Eliminar Silencios",
         subtitle = "Recorta pausas vacías y acelera notas de voz",
         description = "Detecta y suprime automáticamente momentos muertos y pausas largas en notas de voz, grabaciones, podcasts y clases. Ahorra hasta un 40% de tiempo de escucha con micro-fundidos anti-chasquidos.",
         icon = Icons.Default.ContentCut,
-        badge = "Nuevo",
+        badge = "Disponible",
         gradientColors = listOf(Color(0xFFFF5722), Color(0xFFFF9800)),
         tags = listOf("Ahorro de Tiempo", "Detección dB RMS", "Padding de Voz", "Smart Cut"),
         onClick = onNavigateToSilenceRemover,

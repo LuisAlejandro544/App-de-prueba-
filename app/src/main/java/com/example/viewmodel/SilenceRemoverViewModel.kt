@@ -55,9 +55,6 @@ class SilenceRemoverViewModel(application: Application) : AndroidViewModel(appli
   private val _history = MutableStateFlow<List<ConvertedAudioFile>>(emptyList())
   val history: StateFlow<List<ConvertedAudioFile>> = _history.asStateFlow()
 
-  private val _isLoadingSample = MutableStateFlow(false)
-  val isLoadingSample: StateFlow<Boolean> = _isLoadingSample.asStateFlow()
-
   init {
     refreshHistory()
   }
@@ -70,36 +67,6 @@ class SilenceRemoverViewModel(application: Application) : AndroidViewModel(appli
         _audioMetadata.value = info
       } catch (e: Exception) {
         Log.e(TAG, "Error leyendo metadatos de audio: ${e.message}")
-      }
-    }
-  }
-
-  fun generateSampleAudio() {
-    viewModelScope.launch(Dispatchers.IO) {
-      _isLoadingSample.value = true
-      try {
-        val sampleFile = File(getApplication<Application>().cacheDir, "muestra_silencio_test.wav")
-        createSpeechSampleWithSilences(sampleFile)
-        val uri = FileProvider.getUriForFile(
-          getApplication(),
-          "${getApplication<Application>().packageName}.fileprovider",
-          sampleFile
-        )
-        _selectedAudioUri.value = uri
-        _audioMetadata.value = AudioFileInfo(
-          uri = uri,
-          name = "Muestra_Audio_Con_Silencios.wav",
-          formatExtension = "wav",
-          sizeBytes = sampleFile.length(),
-          durationMs = 9000L,
-          sampleRate = 44100,
-          channelCount = 1,
-          bitrateKbps = 705
-        )
-      } catch (e: Exception) {
-        Log.e(TAG, "Error generando muestra: ${e.message}")
-      } finally {
-        _isLoadingSample.value = false
       }
     }
   }
@@ -254,52 +221,6 @@ class SilenceRemoverViewModel(application: Application) : AndroidViewModel(appli
       durStr?.toLongOrNull() ?: 0L
     } catch (e: Exception) {
       0L
-    }
-  }
-
-  private fun createSpeechSampleWithSilences(outputFile: File) {
-    val sampleRate = 44100
-    val totalSeconds = 9 // 9 segundos en total
-    val numSamples = sampleRate * totalSeconds
-    val shortArray = ShortArray(numSamples)
-
-    // Patrón: 2s Voz (440Hz tono modulado), 2s Silencio, 2s Voz (587Hz), 1.5s Silencio, 1.5s Voz
-    for (i in 0 until numSamples) {
-      val timeSec = i.toDouble() / sampleRate
-      val isSpeaking = (timeSec in 0.0..2.0) || (timeSec in 4.0..6.0) || (timeSec in 7.5..9.0)
-
-      if (isSpeaking) {
-        val freq = if (timeSec < 3.0) 440.0 else if (timeSec < 7.0) 587.3 else 523.2
-        val value = (sin(2.0 * Math.PI * freq * timeSec) * 18000).toInt()
-        shortArray[i] = value.toShort()
-      } else {
-        shortArray[i] = 0 // Silencio absoluto
-      }
-    }
-
-    FileOutputStream(outputFile).use { fos ->
-      val pcmBytes = numSamples * 2
-      val header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
-      header.put("RIFF".toByteArray())
-      header.putInt(pcmBytes + 36)
-      header.put("WAVE".toByteArray())
-      header.put("fmt ".toByteArray())
-      header.putInt(16)
-      header.putShort(1) // PCM
-      header.putShort(1) // Mono
-      header.putInt(sampleRate)
-      header.putInt(sampleRate * 2)
-      header.putShort(2)
-      header.putShort(16)
-      header.put("data".toByteArray())
-      header.putInt(pcmBytes)
-
-      fos.write(header.array())
-      val byteBuf = ByteBuffer.allocate(pcmBytes).order(ByteOrder.LITTLE_ENDIAN)
-      for (s in shortArray) {
-        byteBuf.putShort(s)
-      }
-      fos.write(byteBuf.array())
     }
   }
 

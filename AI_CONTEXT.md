@@ -16,6 +16,9 @@ Construir una aplicación móvil de conversión y procesamiento de audio para An
    - Menú Principal (`MainHubScreen.kt`) con el catálogo de herramientas y explorador de carpetas.
    - Pantallas dedicadas:
      - `AudioConverterScreen.kt`: Conversión multiformato con protección de fidelidad.
+     - `AudioCompressorScreen.kt`: Compresión inteligente con estimación en MB y presets para WhatsApp, Email y ahorro extremo.
+     - `AudioSplitterScreen.kt`: División y recorte automático de pistas por detección de silencios.
+     - `SilenceRemoverScreen.kt`: Eliminación y aceleración de silencios/pausas por RMS en decibelios.
      - `VideoToAudioScreen.kt`: Extracción y transcodificación de audio de videos.
      - `Spatial8DScreen.kt`: Creación de Audio 8D Espacial y Holofónico con radar orbital 360°.
      - `AudioMergerScreen.kt`: Unión y concatenación de hasta 6 pistas con normalización DSP y micro-fundido.
@@ -26,6 +29,9 @@ Construir una aplicación móvil de conversión y procesamiento de audio para An
    - Estructura de carpetas en el almacenamiento accesible del dispositivo (público en `Environment.DIRECTORY_MUSIC` bajo `Música/AudioConverter` para compatibilidad total con Android 11+ y exploradores de archivos externos):
      - Raíz pública: `AudioConverter`
      - Subcarpeta `Convertir`: Audios convertidos entre formatos.
+     - Subcarpeta `Comprimir`: Audios optimizados y reducidos de peso para compartir.
+     - Subcarpeta `Dividir`: Pistas de audio separadas automáticamente por silencios.
+     - Subcarpeta `Sin Silencio`: Audios con pausas y silencios eliminados / acelerados.
      - Subcarpeta `Video a Audio`: Pistas de audio extraídas de videos.
      - Subcarpeta `Audio 8D`: Audios espaciales y binaurales 360°.
      - Subcarpeta `Fusionar`: Pistas de audio combinadas y unificadas.
@@ -34,6 +40,9 @@ Construir una aplicación móvil de conversión y procesamiento de audio para An
    - Apertura directa de carpetas en el explorador de archivos del sistema mediante `FileProvider`.
 
 3. **Capa de Motores de Audio y Procesamiento DSP**:
+   - `AudioSplitterProcessor.kt`: Motor de segmentación acústica que analiza silencios RMS, extrae segmentos en paralelo, los codifica y permite empaquetar en ZIP.
+   - `AudioCompressorProcessor.kt`: Motor de compresión que recalcula bitrates, aplica perfiles acústicos (Voz, Música, Ahorro Máximo) y downsampling inteligente.
+   - `SilenceRemoverProcessor.kt`: Motor DSP de análisis de energía cuadrática media (RMS) para corte preciso de silencios sin chasquidos.
    - `AudioTranscoder.kt`: Controla el flujo de decodificación a buffers PCM lineales y codificación final.
    - `VideoAudioExtractor.kt`: Módulo de demuxing para aislar y extraer audio desde contenedores de video.
    - `Spatial8DAudioProcessor.kt`: Motor de audio 8D que aplica paneo orbital con LFO, cálculo de retardo temporal interaural (ITD), efecto de sombra craneal y reverberación espacial Schroeder.

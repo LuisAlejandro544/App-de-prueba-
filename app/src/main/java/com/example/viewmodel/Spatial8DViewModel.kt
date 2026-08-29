@@ -51,9 +51,6 @@ class Spatial8DViewModel(application: Application) : AndroidViewModel(applicatio
   private val _convertedHistory = MutableStateFlow<List<ConvertedAudioFile>>(emptyList())
   val convertedHistory: StateFlow<List<ConvertedAudioFile>> = _convertedHistory.asStateFlow()
 
-  private val _isLoadingSample = MutableStateFlow(false)
-  val isLoadingSample: StateFlow<Boolean> = _isLoadingSample.asStateFlow()
-
   private var processingJob: Job? = null
 
   init {
@@ -202,70 +199,6 @@ class Spatial8DViewModel(application: Application) : AndroidViewModel(applicatio
       context.startActivity(Intent.createChooser(intent, "Compartir Audio 8D"))
     } catch (e: Exception) {
       e.printStackTrace()
-    }
-  }
-
-  fun generateSampleAudio() {
-    _isLoadingSample.value = true
-    viewModelScope.launch(Dispatchers.IO) {
-      try {
-        val sampleFile = File(getApplication<Application>().cacheDir, "sample_audio_8d.wav")
-        // Generar un tono armónico melódico con arpegios estéreo de 8 segundos
-        val sampleRate = 44100
-        val durationSec = 8
-        val totalSamples = sampleRate * durationSec
-        val pcmData = ByteArray(totalSamples * 4) // 16-bit estéreo
-
-        val frequencies = doubleArrayOf(261.63, 329.63, 392.00, 523.25) // Do, Mi, Sol, Do
-        for (i in 0 until totalSamples) {
-          val t = i.toDouble() / sampleRate.toDouble()
-          val noteIndex = ((t * 2).toInt()) % frequencies.size
-          val freq = frequencies[noteIndex]
-          val wave = Math.sin(2.0 * Math.PI * freq * t) * 0.7 + Math.sin(4.0 * Math.PI * freq * t) * 0.2
-          val sampleVal = (wave * 28000.0).toInt().coerceIn(-32768, 32767).toShort()
-
-          val byteIdx = i * 4
-          pcmData[byteIdx] = (sampleVal.toInt() and 0xFF).toByte()
-          pcmData[byteIdx + 1] = ((sampleVal.toInt() shr 8) and 0xFF).toByte()
-          pcmData[byteIdx + 2] = (sampleVal.toInt() and 0xFF).toByte()
-          pcmData[byteIdx + 3] = ((sampleVal.toInt() shr 8) and 0xFF).toByte()
-        }
-
-        // Escribir cabecera WAV
-        val fos = FileOutputStream(sampleFile)
-        val dataLen = pcmData.size
-        val totalLen = dataLen + 36
-        val byteRate = sampleRate * 2 * 2
-
-        val header = ByteArray(44)
-        header[0] = 'R'.code.toByte(); header[1] = 'I'.code.toByte(); header[2] = 'F'.code.toByte(); header[3] = 'F'.code.toByte()
-        header[4] = (totalLen and 0xff).toByte(); header[5] = ((totalLen shr 8) and 0xff).toByte()
-        header[6] = ((totalLen shr 16) and 0xff).toByte(); header[7] = ((totalLen shr 24) and 0xff).toByte()
-        header[8] = 'W'.code.toByte(); header[9] = 'A'.code.toByte(); header[10] = 'V'.code.toByte(); header[11] = 'E'.code.toByte()
-        header[12] = 'f'.code.toByte(); header[13] = 'm'.code.toByte(); header[14] = 't'.code.toByte(); header[15] = ' '.code.toByte()
-        header[16] = 16; header[17] = 0; header[18] = 0; header[19] = 0
-        header[20] = 1; header[21] = 0; header[22] = 2; header[23] = 0
-        header[24] = (sampleRate and 0xff).toByte(); header[25] = ((sampleRate shr 8) and 0xff).toByte()
-        header[26] = ((sampleRate shr 16) and 0xff).toByte(); header[27] = ((sampleRate shr 24) and 0xff).toByte()
-        header[28] = (byteRate and 0xff).toByte(); header[29] = ((byteRate shr 8) and 0xff).toByte()
-        header[30] = ((byteRate shr 16) and 0xff).toByte(); header[31] = ((byteRate shr 24) and 0xff).toByte()
-        header[32] = 4; header[33] = 0; header[34] = 16; header[35] = 0
-        header[36] = 'd'.code.toByte(); header[37] = 'a'.code.toByte(); header[38] = 't'.code.toByte(); header[39] = 'a'.code.toByte()
-        header[40] = (dataLen and 0xff).toByte(); header[41] = ((dataLen shr 8) and 0xff).toByte()
-        header[42] = ((dataLen shr 16) and 0xff).toByte(); header[43] = ((dataLen shr 24) and 0xff).toByte()
-
-        fos.write(header)
-        fos.write(pcmData)
-        fos.flush()
-        fos.close()
-
-        val sampleUri = Uri.fromFile(sampleFile)
-        selectAudio(sampleUri)
-      } catch (e: Exception) {
-        e.printStackTrace()
-      } finally {
-        _isLoadingSample.value = false
-      }
     }
   }
 

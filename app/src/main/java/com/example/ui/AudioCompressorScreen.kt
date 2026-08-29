@@ -22,11 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -38,13 +36,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -68,16 +65,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.audio.AppAudioFolder
 import com.example.audio.AppStorageManager
 import com.example.model.ConvertedAudioFile
-import com.example.ui.components.silence.SilenceProgressDialog
-import com.example.ui.components.silence.SilenceSettingsCard
-import com.example.ui.components.spatial.SpatialExportSettingsCard
-import com.example.viewmodel.SilenceRemoverViewModel
+import com.example.ui.components.compressor.CompressorPresetsCard
+import com.example.ui.components.compressor.CompressorProfileCard
+import com.example.ui.components.compressor.CompressorProgressDialog
+import com.example.ui.components.compressor.CompressorSizeComparisonCard
+import com.example.viewmodel.AudioCompressorViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SilenceRemoverScreen(
+fun AudioCompressorScreen(
   onNavigateBack: () -> Unit,
-  viewModel: SilenceRemoverViewModel = viewModel()
+  viewModel: AudioCompressorViewModel = viewModel()
 ) {
   val context = LocalContext.current
   val selectedUri by viewModel.selectedAudioUri.collectAsState()
@@ -86,13 +84,19 @@ fun SilenceRemoverScreen(
   val progress by viewModel.progress.collectAsState()
   val history by viewModel.history.collectAsState()
   val playbackState by viewModel.playbackState.collectAsState()
+  val estimatedSizeBytes by viewModel.estimatedSizeBytes.collectAsState()
+  val estimatedSavedPercent by viewModel.estimatedSavedPercent.collectAsState()
+  val effectiveBitrateKbps by viewModel.effectiveBitrateKbps.collectAsState()
 
   var customNameInput by remember { mutableStateOf("") }
 
   val audioPickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent()
   ) { uri: Uri? ->
-    uri?.let { viewModel.selectAudio(it) }
+    uri?.let {
+      viewModel.selectAudio(it)
+      customNameInput = ""
+    }
   }
 
   Scaffold(
@@ -101,14 +105,14 @@ fun SilenceRemoverScreen(
         title = {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-              imageVector = Icons.Default.ContentCut,
+              imageVector = Icons.Default.Compress,
               contentDescription = null,
               tint = MaterialTheme.colorScheme.primary,
               modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "Eliminar Silencios",
+              text = "Comprimir Audio",
               style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
           }
@@ -116,7 +120,7 @@ fun SilenceRemoverScreen(
         navigationIcon = {
           IconButton(
             onClick = onNavigateBack,
-            modifier = Modifier.testTag("silence_back_button")
+            modifier = Modifier.testTag("compressor_back_button")
           ) {
             Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -131,7 +135,7 @@ fun SilenceRemoverScreen(
             modifier = Modifier.padding(end = 12.dp)
           ) {
             Text(
-              text = "Smart Cut",
+              text = "Smart Shrink",
               style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
               color = MaterialTheme.colorScheme.onPrimaryContainer,
               modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -163,7 +167,7 @@ fun SilenceRemoverScreen(
         ) {
           Column(modifier = Modifier.padding(16.dp)) {
             Text(
-              text = "Pista de Audio Origen",
+              text = "Pista de Audio a Reducir",
               style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
               color = MaterialTheme.colorScheme.onSurface
             )
@@ -175,7 +179,7 @@ fun SilenceRemoverScreen(
                 onClick = { audioPickerLauncher.launch("audio/*") },
                 modifier = Modifier
                   .fillMaxWidth()
-                  .testTag("silence_pick_audio_button"),
+                  .testTag("compress_pick_audio_button"),
                 shape = RoundedCornerShape(12.dp)
               ) {
                 Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -220,7 +224,7 @@ fun SilenceRemoverScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                      text = "${audioMetadata?.formattedDuration ?: "--:--"} • ${audioMetadata?.formatExtension?.uppercase() ?: "AUDIO"} • ${audioMetadata?.sampleRate ?: 44100} Hz",
+                      text = "${audioMetadata?.formattedDuration ?: "--:--"} • ${audioMetadata?.formatExtension?.uppercase() ?: "AUDIO"} • ${audioMetadata?.formattedSize ?: "0 KB"}",
                       style = MaterialTheme.typography.labelSmall,
                       color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -261,59 +265,94 @@ fun SilenceRemoverScreen(
         }
       }
 
-      // 2. Configuración de Umbral de Detección, Pausa Mínima, Padding y Modo
+      // 2. Tarjeta de Comparación y Ahorro Estimado
+      if (selectedUri != null) {
+        item {
+          CompressorSizeComparisonCard(
+            audioMetadata = audioMetadata,
+            estimatedSizeBytes = estimatedSizeBytes,
+            savedPercent = estimatedSavedPercent,
+            effectiveBitrateKbps = effectiveBitrateKbps
+          )
+        }
+      }
+
+      // 3. Tarjeta de Ajustes Predefinidos y Límites de Tamaño
       item {
-        SilenceSettingsCard(
+        CompressorPresetsCard(
           options = options,
-          onThresholdSelected = { viewModel.updateThresholdLevel(it) },
-          onMinDurationChanged = { viewModel.updateMinSilenceDuration(it) },
-          onPaddingChanged = { viewModel.updatePaddingVoice(it) },
-          onModeSelected = { viewModel.updateCutMode(it) }
+          onPresetSelected = { viewModel.setPreset(it) },
+          onCustomTargetSizeChanged = { viewModel.setCustomTargetSizeMb(it) },
+          onCustomBitrateChanged = { viewModel.setBitrate(it) }
         )
       }
 
-      // 3. Configuración de Exportación (Formato, Bitrate y Nombre)
+      // 4. Tarjeta de Perfil Acústico y Formato
       item {
-        SpatialExportSettingsCard(
-          options = com.example.model.Spatial8DOptions(
-            targetFormat = options.targetFormat,
-            bitrateKbps = options.bitrateKbps
-          ),
-          customFileName = customNameInput,
-          onFormatSelected = { viewModel.updateTargetFormat(it) },
-          onBitrateSelected = { viewModel.updateBitrate(it) },
-          onFileNameChanged = {
-            customNameInput = it
-            viewModel.updateCustomFileName(it)
-          }
+        CompressorProfileCard(
+          options = options,
+          onProfileSelected = { viewModel.setProfile(it) },
+          onFormatSelected = { viewModel.setTargetFormat(it) }
         )
       }
 
-      // 4. Botón Principal de Procesamiento
+      // 5. Nombre de archivo personalizado
+      item {
+        Card(
+          shape = RoundedCornerShape(18.dp),
+          colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+          elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+              text = "Nombre del Archivo Final (Opcional)",
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+              value = customNameInput,
+              onValueChange = {
+                customNameInput = it
+                viewModel.setCustomFileName(it)
+              },
+              placeholder = { Text("Ej: reunion_comprimida") },
+              singleLine = true,
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("compress_filename_input")
+            )
+          }
+        }
+      }
+
+      // 6. Botón de Acción Principal
       item {
         val isReady = selectedUri != null
         Button(
-          onClick = { viewModel.startProcessing() },
+          onClick = { viewModel.startCompression() },
           enabled = isReady,
           modifier = Modifier
             .fillMaxWidth()
             .height(54.dp)
-            .testTag("silence_process_button"),
+            .testTag("compress_action_button"),
           shape = RoundedCornerShape(16.dp),
           colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary
           )
         ) {
-          Icon(Icons.Default.ContentCut, contentDescription = null, modifier = Modifier.size(22.dp))
+          Icon(Icons.Default.Compress, contentDescription = null, modifier = Modifier.size(22.dp))
           Spacer(modifier = Modifier.width(8.dp))
           Text(
-            text = "Limpiar y Eliminar Silencios",
+            text = "Comprimir y Optimizar Audio",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
           )
         }
       }
 
-      // 5. Historial de Audios Optimizados
+      // 7. Historial de Audios Comprimidos
       item {
         Row(
           modifier = Modifier
@@ -322,13 +361,13 @@ fun SilenceRemoverScreen(
           verticalAlignment = Alignment.CenterVertically
         ) {
           Text(
-            text = "Audios Optimizados (${history.size})",
+            text = "Audios Comprimidos (${history.size})",
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface
           )
           Spacer(modifier = Modifier.weight(1f))
           FilledTonalButton(
-            onClick = { AppStorageManager.openFolderInFileManager(context, AppAudioFolder.SIN_SILENCIO) },
+            onClick = { AppStorageManager.openFolderInFileManager(context, AppAudioFolder.COMPRIMIR) },
             shape = RoundedCornerShape(8.dp)
           ) {
             Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -359,12 +398,12 @@ fun SilenceRemoverScreen(
               )
               Spacer(modifier = Modifier.height(8.dp))
               Text(
-                text = "Aún no has procesado audios sin silencio",
+                text = "Aún no has comprimido audios",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
               )
               Text(
-                text = "Selecciona un audio o prueba la muestra de demostración.",
+                text = "Selecciona un archivo de audio para reducir su tamaño y ahorrar espacio.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
               )
@@ -414,7 +453,7 @@ fun SilenceRemoverScreen(
                   )
                   Spacer(modifier = Modifier.height(2.dp))
                   Text(
-                    text = "${file.format.displayName} • ${file.formattedSize} • ${file.formattedDuration}",
+                    text = "${file.format.displayName} • ${file.formattedSize} • ${file.bitrateKbps} kbps",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                   )
@@ -460,11 +499,11 @@ fun SilenceRemoverScreen(
     }
   }
 
-  // Diálogo de Progreso
-  SilenceProgressDialog(
+  // Diálogo de Progreso y Resultados
+  CompressorProgressDialog(
     progress = progress,
     playbackState = playbackState,
-    onCancel = { viewModel.cancelProcessing() },
+    onCancel = { viewModel.cancelCompression() },
     onDismiss = { viewModel.dismissProgressDialog() },
     onTogglePlay = { viewModel.togglePlayFile(it) },
     onSeekTo = { viewModel.seekTo(it) },

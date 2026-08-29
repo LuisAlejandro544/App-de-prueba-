@@ -20,8 +20,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.audio.AppStorageManager
+import com.example.ui.AudioCompressorScreen
 import com.example.ui.AudioConverterScreen
 import com.example.ui.AudioMergerScreen
+import com.example.ui.AudioSplitterScreen
 import com.example.ui.MainHubScreen
 import com.example.ui.Spatial8DScreen
 import com.example.ui.VideoToAudioScreen
@@ -30,6 +32,8 @@ import com.example.ui.theme.MyApplicationTheme
 enum class AudioAppScreen {
   HUB,
   CONVERTER,
+  COMPRESSOR,
+  SPLITTER,
   SILENCE_REMOVER,
   VIDEO_EXTRACTOR,
   SPATIAL_8D,
@@ -74,6 +78,12 @@ class MainActivity : ComponentActivity() {
                   onNavigateToConverter = {
                     currentScreen = AudioAppScreen.CONVERTER
                   },
+                  onNavigateToCompressor = {
+                    currentScreen = AudioAppScreen.COMPRESSOR
+                  },
+                  onNavigateToSplitter = {
+                    currentScreen = AudioAppScreen.SPLITTER
+                  },
                   onNavigateToSilenceRemover = {
                     currentScreen = AudioAppScreen.SILENCE_REMOVER
                   },
@@ -90,6 +100,20 @@ class MainActivity : ComponentActivity() {
               }
               AudioAppScreen.CONVERTER -> {
                 AudioConverterScreen(
+                  onNavigateBack = {
+                    currentScreen = AudioAppScreen.HUB
+                  }
+                )
+              }
+              AudioAppScreen.COMPRESSOR -> {
+                AudioCompressorScreen(
+                  onNavigateBack = {
+                    currentScreen = AudioAppScreen.HUB
+                  }
+                )
+              }
+              AudioAppScreen.SPLITTER -> {
+                AudioSplitterScreen(
                   onNavigateBack = {
                     currentScreen = AudioAppScreen.HUB
                   }

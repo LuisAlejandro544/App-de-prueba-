@@ -16,6 +16,8 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
     ```
     📁 Almacenamiento Público / Música / AudioConverter
       ├── 📁 Convertir         -> Audios convertidos entre formatos (MP3, WAV, FLAC, M4A, etc.)
+      ├── 📁 Comprimir         -> Audios optimizados y reducidos de tamaño para compartir
+      ├── 📁 Dividir           -> Pistas y canciones separadas automáticamente por silencios
       ├── 📁 Sin Silencio      -> Audios con pausas y silencios eliminados / acelerados (Smart Cut)
       ├── 📁 Video a Audio     -> Pistas de audio extraídas de videos (MP4, MKV, WebM, etc.)
       ├── 📁 Audio 8D          -> Audios espaciales y holofónicos 360° con acústica binaural
@@ -25,6 +27,30 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
     ```
   - **Indexación Inmediata en MediaStore**: Los audios exportados aparecen al instante en los reproductores de música y galerías del sistema sin importar la versión de Android (incluyendo Android 11, 12, 13, 14+).
   - **Botón de Exploración Rápida**: Acceso directo desde la interfaz de la app para abrir la carpeta correspondiente en el gestor de archivos.
+
+- **Herramienta "Dividir por Silencios" (Smart Audio Splitter & Auto-Chunker)**:
+  - **Detección Automática de Pistas**: Analiza grabaciones extensas (sesiones en vivo, ensayos musicales, clases universitarias o podcasts) y detecta los límites de cada pista a través de pausas de silencio prolongadas en decibelios RMS.
+  - **Configuración de Sensibilidad y Pausa Mínima**:
+    - *Sensibilidad*: Sensible (-45 dB), Equilibrado (-35 dB) y Relajado (-25 dB para grabaciones con soplido de fondo).
+    - *Pausa Mínima*: 1.0s (canciones rápidas/frases), 2.0s (álbumes de música estándar) o 3.0s (conferencias y entrevistas).
+  - **Previsualización Interactiva y Renombrado**: Muestra cada segmento detectado con duración y marcas de tiempo, preescucha en tiempo real, checkbox de selección individual y edición de nombres de pista antes de exportar.
+  - **Exportación en Lote y Empaquetado ZIP**: Genera todas las pistas en MP3, M4A/AAC, WAV, FLAC u OGG y ofrece la opción de comprimirlas en un archivo `.zip` para compartirlas fácilmente en un solo paquete.
+  - **Almacenamiento Directo**: Guarda en la subcarpeta pública `Música/AudioConverter/Dividir`.
+
+- **Herramienta "Comprimir Audio" (Smart Shrink & Reducción de Tamaño en MB)**:
+  - **Estimación Predictiva en Tiempo Real**: Calcula matemáticamente el tamaño final en MB y el porcentaje de ahorro antes de comenzar el proceso.
+  - **Ajustes Predefinidos para Redes y Mensajería**:
+    - *WhatsApp / Discord*: Comprime garantizando un tamaño menor a 16 MB para envío instantáneo sin errores de límite.
+    - *Email / Gmail*: Optimiza para el límite de 25 MB en adjuntos de correo electrónico.
+    - *Ahorro Extremo (75-85%)*: Reduce drásticamente a 48 kbps ideal para audios de muy larga duración o clases grabadas.
+    - *Equilibrado (50-60%)*: Reducción balanceada a 96 kbps con gran fidelidad acústica.
+    - *Ligero (30-40%)*: Bitrate de 128 kbps manteniendo calidad prácticamente transparente.
+    - *Tamaño Específico (MB)*: Slider interactivo para ingresar el peso deseado exacto (ej. 10 MB) calculando la tasa de bits requerida automáticamente.
+  - **Perfiles Acústicos Inteligentes**:
+    - *Voz / Podcasts*: Aplica mezcla mono y filtrado de frecuencias no vocales con remuestreo eficiente logrando compresión máxima.
+    - *Música / Canciones*: Preserva la imagen estéreo y rango dinámico con codificación psicoacústica avanzada.
+    - *Máximo Ahorro*: Downsampling a 22050 Hz y mono para exprimir el almacenamiento al máximo.
+  - **Almacenamiento Directo**: Guarda en la subcarpeta pública `Música/AudioConverter/Comprimir`.
 
 - **Herramienta "Eliminar Silencios" (Smart Silence Remover & Voice Booster)**:
   - **Detección Acústica por Niveles de Energía RMS (dB)**: Analiza el flujo de audio en bloques continuos para identificar con precisión quirúrgica momentos muertos, pausas de respiración y silencios entre oraciones.

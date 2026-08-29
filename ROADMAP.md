@@ -31,7 +31,17 @@ Este documento describe las fases de evolución técnica y funcional del proyect
 
 ---
 
-## 📍 Fase 3: Unión Acústica, Audio Espacial 8D y Herramientas Avanzadas (En Progreso 🚧)
+## 📍 Fase 3: Unión Acústica, Compresión Inteligente, Audio 8D y Herramientas Avanzadas (En Progreso 🚧)
+- [x] **Herramienta: Dividir por Silencios (Smart Audio Splitter / Auto-Chunker)**:
+  - Detección automática de cortes de pistas a partir del análisis espectral de energía RMS (dB).
+  - Umbral de decibelios y tiempo de pausa mínimo configurables para música, conciertos o grabaciones académicas.
+  - Previsualización interactiva con reproductor de muestra por segmento, selección individual y renombrado de pistas.
+  - Exportación individual de pistas a `Música/AudioConverter/Dividir/` y empaquetado opcional en archivo ZIP.
+- [x] **Herramienta: Comprimir Audio (Smart Size Shrinker)**:
+  - Estimación en tiempo real del tamaño de salida en MB y porcentaje de ahorro previo a la compresión.
+  - Ajustes de compresión para WhatsApp/Discord (<16MB), Email (<25MB), Ahorro Extremo, Equilibrado y Tamaño Específico en MB.
+  - Perfiles acústicos inteligentes (Voz/Podcasts, Música/Canciones, Máximo Ahorro) con remuestreo y control de canales.
+  - Guardado directo en la subcarpeta pública `Música/AudioConverter/Comprimir/`.
 - [x] **Herramienta: Unir Audios / Fusión de Pistas (Hasta 6 Pistas)**:
   - Concatenación interactiva con reordenación de pistas y preescucha individual.
   - Normalización DSP y remuestreo lineal ante diferencias de sample rate o canales.

@@ -45,10 +45,8 @@ import com.example.model.AudioFileInfo
 fun SpatialAudioSourceCard(
   selectedUri: Uri?,
   audioMetadata: AudioFileInfo?,
-  isLoadingSample: Boolean,
   playbackState: PlaybackState,
   onPickAudio: () -> Unit,
-  onGenerateSample: () -> Unit,
   onTogglePlayOriginal: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -69,36 +67,16 @@ fun SpatialAudioSourceCard(
       Spacer(modifier = Modifier.height(10.dp))
 
       if (selectedUri == null) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
+        Button(
+          onClick = onPickAudio,
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("spatial_pick_audio_button"),
+          shape = RoundedCornerShape(12.dp)
         ) {
-          Button(
-            onClick = onPickAudio,
-            modifier = Modifier
-              .weight(1f)
-              .testTag("spatial_pick_audio_button"),
-            shape = RoundedCornerShape(12.dp)
-          ) {
-            Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text("Elegir Audio")
-          }
-
-          OutlinedButton(
-            onClick = onGenerateSample,
-            enabled = !isLoadingSample,
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(12.dp)
-          ) {
-            if (isLoadingSample) {
-              CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-            } else {
-              Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
-              Spacer(modifier = Modifier.width(6.dp))
-              Text("Muestra Demo")
-            }
-          }
+          Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+          Spacer(modifier = Modifier.width(6.dp))
+          Text("Elegir Archivo de Audio")
         }
       } else {
         // Audio seleccionado

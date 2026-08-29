@@ -1,18 +1,26 @@
-feat: Implementación de Selector de Vista en el Menú Principal (Cuadrícula, Lista Compacta y Detallada)
+feat: Integración de la herramienta Dividir por Silencios (Splitter) y optimizaciones
 
-- **Selector de Vista Interactivo (`HubViewModeSelector.kt` & `HubModels.kt`)**:
-  * Creación del componente de alternancia rápida estilo segmented control en la barra de herramientas.
-  * Tres modos de visualización seleccionables:
-    - **Cuadrícula (Grid)**: Tarjetas visuales de 2 columnas altamente compactas, mostrando 4 a 6 herramientas en pantalla sin scroll excesivo.
-    - **Lista Compacta (List)**: Filas horizontales delgadas estilo explorador/ajustes con navegación directa.
-    - **Detallada (Detailed)**: Tarjetas expandidas con explicaciones completas, etiquetas técnicas y botón de acción.
-  * Persistencia del estado seleccionado mediante `rememberSaveable`.
+- **Herramienta Dividir por Silencios (`AudioSplitterScreen.kt` & `AudioSplitterProcessor.kt`)**:
+  * Motor DSP inteligente de segmentación automática por análisis espectral de energía RMS (dB).
+  * Umbrales de sensibilidad configurables (-45 dB, -35 dB, -25 dB) y detección de pausa mínima (1.0s, 2.0s, 3.0s) con margen de padding para proteger inicios/finales de audio.
+  * Tarjeta de vista previa interactiva con reproductor de muestra por segmento, selección individual mediante checkboxes y personalización de nombres de pistas (`DetectedTracksPreviewCard.kt`).
+  * Exportación por lotes en formatos populares (MP3, M4A/AAC, WAV, FLAC, OGG) con opción de empaquetado directo en archivo ZIP (`SplitProgressDialog.kt`).
+  * Almacenamiento organizado en la subcarpeta pública `Música/AudioConverter/Dividir` con indexación inmediata en MediaStore y compatibilidad Scoped Storage.
 
-- **Componentes Modulares de Tarjetas (`ActiveToolCard.kt`)**:
-  * `ActiveToolGridCard`: Tarjeta optimizada para cuadrícula de 2 columnas con icono en gradiente, títulos de tamaño balanceado, badge destacado y área táctil completa de acceso directo.
-  * `ActiveToolListRow`: Fila horizontal delgada y limpia con indicador visual y chevron de navegación.
-  * `ActiveToolCard`: Mantenimiento de la tarjeta detallada original con tags y flujo completo.
+- **Integración en la Navegación y Menú Principal**:
+  * Registro de la herramienta en `MainHubScreen.kt` y `MainActivity.kt` con navegación desacoplada y soporte de botón atrás.
+  * Creación de la carpeta `DIVIDIR` en `AppStorageManager.kt` para gestión centralizada de archivos.
 
-- **Integración y Arquitectura (`MainHubScreen.kt` & `STRUCTURE.md`)**:
-  * Refactorización del layout principal para soportar renderizado dinámico en cuadrícula emparejada (`chunked(2)`) y listas sin colisiones de scroll.
-  * Actualización de la documentación arquitectónica en `STRUCTURE.md`.
+- **Herramienta de Compresión de Audio Inteligente (`AudioCompressorScreen.kt` & `AudioCompressorProcessor.kt`)**:
+  * Implementación del motor de compresión y reducción de peso en MB con estimación predictiva en tiempo real.
+  * Presets de compresión para mensajería y redes: WhatsApp/Discord (<16MB), Email (<25MB), Ahorro Extremo, Equilibrado y Slider de tamaño personalizado en MB.
+  * Perfiles acústicos optimizados: Voz/Podcasts (downsampling y mono eficiente), Música/Canciones (imagen estéreo) y Máximo Ahorro.
+  * Interfaz de usuario modular en Jetpack Compose (`CompressorSizeComparisonCard.kt`, `CompressorPresetsCard.kt`, `CompressorProfileCard.kt`, `CompressorProgressDialog.kt`).
+  * Integración de la subcarpeta pública `Música/AudioConverter/Comprimir` en `AppStorageManager.kt` con registro inmediato en MediaStore.
+
+- **Limpieza de Archivos y Generadores de Audio Demo**:
+  * Eliminación de las funciones de síntesis artificial de audio (`createSpeechSampleWithSilences` y `generateSampleAudio`) en los ViewModels.
+  * Remoción de los botones de "Muestra Demo" en las pantallas de Audio 8D y Eliminación de Silencios para una experiencia 100% enfocada en archivos reales del usuario.
+
+- **Actualización Documental Integral**:
+  * Sincronización de `README.md`, `ROADMAP.md`, `STRUCTURE.md`, `AI_CONTEXT.md` y `commit_message.txt` reflejando la nueva herramienta de división de audio, compresión, jerarquía de almacenamiento y arquitectura del proyecto.
