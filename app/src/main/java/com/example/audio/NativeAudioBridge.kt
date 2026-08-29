@@ -33,6 +33,19 @@ object NativeAudioBridge {
     volumeGain: Float
   ): Boolean
 
+  external fun process8DSpatialNative(
+    inputPcmPath: String,
+    outputPcmPath: String,
+    sampleRate: Int,
+    srcChannels: Int,
+    rotationSpeedHz: Float,
+    trajectoryType: Int,
+    spatialDepth: Float,
+    reverbRoomSize: Float,
+    reverbDamping: Float,
+    reverbWet: Float
+  ): Boolean
+
   external fun writeWavNative(
     inputPcmPath: String,
     outputWavPath: String,

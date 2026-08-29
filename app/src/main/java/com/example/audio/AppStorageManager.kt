@@ -28,8 +28,9 @@ import java.io.FileOutputStream
 enum class AppAudioFolder(val folderName: String, val displayName: String, val description: String) {
   CONVERTIR("Convertir", "Convertir", "Audios convertidos a otros formatos (MP3, WAV, FLAC, etc.)"),
   VIDEO_A_AUDIO("Video a Audio", "Video a Audio", "Pistas de audio extraídas de videos"),
-  RECORTAR("Recortar", "Recortar", "Segmentos recortados y tonos de llamada"),
+  AUDIO_8D("Audio 8D", "Audio 8D", "Audios espaciales 3D / 8D inmersivos con rotación binaural"),
   FUSIONAR("Fusionar", "Fusionar", "Pistas de audio combinadas"),
+  RECORTAR("Recortar", "Recortar", "Segmentos recortados y tonos de llamada"),
   GRABACIONES("Grabaciones", "Grabaciones", "Audios grabados y muestras de prueba")
 }
 
@@ -38,16 +39,38 @@ object AppStorageManager {
   const val APP_ROOT_FOLDER_NAME = "AudioConverter"
 
   /**
-   * Crea e inicializa toda la jerarquía de carpetas en el almacenamiento accesible del dispositivo.
+   * Retorna el directorio público primario en el almacenamiento accesible (Música/AudioConverter),
+   * visible directamente en exploradores de archivos como Google Files, Solid Explorer o conexión USB a PC.
+   */
+  fun getBaseAppStorageDirectory(context: Context): File {
+    // 1. Carpeta pública de Música (Estándar Android para archivos de audio accesibles al usuario)
+    val publicMusicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+    if (publicMusicDir != null) {
+      val appMusicDir = File(publicMusicDir, APP_ROOT_FOLDER_NAME)
+      if (appMusicDir.exists() || appMusicDir.mkdirs()) {
+        return appMusicDir
+      }
+    }
+
+    // 2. Directorio de la app en caso de restricciones de permisos del sistema
+    val externalDir = context.getExternalFilesDir(null)
+    val fallbackDir = if (externalDir != null) {
+      File(externalDir, APP_ROOT_FOLDER_NAME)
+    } else {
+      File(context.filesDir, APP_ROOT_FOLDER_NAME)
+    }
+    if (!fallbackDir.exists()) {
+      fallbackDir.mkdirs()
+    }
+    return fallbackDir
+  }
+
+  /**
+   * Crea e inicializa toda la jerarquía de subcarpetas en el almacenamiento accesible del dispositivo.
    */
   fun ensureAllFoldersExist(context: Context) {
     try {
-      // 1. Crear en el almacenamiento accesible de la aplicación
       val baseAppDir = getBaseAppStorageDirectory(context)
-      if (!baseAppDir.exists()) {
-        baseAppDir.mkdirs()
-      }
-
       for (folder in AppAudioFolder.values()) {
         val subDir = File(baseAppDir, folder.folderName)
         if (!subDir.exists()) {
@@ -55,14 +78,13 @@ object AppStorageManager {
         }
       }
 
-      // 2. Si es Android 9 o inferior con permisos, crear también en la carpeta pública Music
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-        val publicMusicDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), APP_ROOT_FOLDER_NAME)
-        if (!publicMusicDir.exists()) {
-          publicMusicDir.mkdirs()
-        }
+      // También asegurar en almacenamiento externo directo si está disponible
+      val musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+      if (musicDir != null) {
+        val publicAppDir = File(musicDir, APP_ROOT_FOLDER_NAME)
+        publicAppDir.mkdirs()
         for (folder in AppAudioFolder.values()) {
-          val subDir = File(publicMusicDir, folder.folderName)
+          val subDir = File(publicAppDir, folder.folderName)
           if (!subDir.exists()) {
             subDir.mkdirs()
           }
@@ -74,19 +96,7 @@ object AppStorageManager {
   }
 
   /**
-   * Retorna el directorio base de la app accesible en el almacenamiento del dispositivo.
-   */
-  fun getBaseAppStorageDirectory(context: Context): File {
-    val externalDir = context.getExternalFilesDir(null)
-    return if (externalDir != null) {
-      File(externalDir, APP_ROOT_FOLDER_NAME)
-    } else {
-      File(context.filesDir, APP_ROOT_FOLDER_NAME)
-    }
-  }
-
-  /**
-   * Retorna la subcarpeta específica para el tipo de audio indicado (asegurando su creación).
+   * Retorna la subcarpeta específica para el tipo de audio indicado (asegurando su creación en almacenamiento público).
    */
   fun getFolder(context: Context, folderType: AppAudioFolder): File {
     val baseDir = getBaseAppStorageDirectory(context)
@@ -98,10 +108,64 @@ object AppStorageManager {
   }
 
   /**
+   * Obtiene todos los archivos existentes en la subcarpeta, buscando tanto en la ubicación pública
+   * como en ubicaciones de fallback previas para no perder ningún archivo convertido anteriormente.
+   */
+  fun listFilesForFolder(context: Context, folderType: AppAudioFolder): List<File> {
+    val result = mutableListOf<File>()
+    val seenPaths = mutableSetOf<String>()
+
+    // 1. Buscar en directorio público primario
+    try {
+      val primaryFolder = getFolder(context, folderType)
+      primaryFolder.listFiles()?.filter { it.isFile && it.length() > 0 }?.forEach {
+        if (seenPaths.add(it.name)) {
+          result.add(it)
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+
+    // 2. Buscar en carpeta pública directa de Música (por si acaso difiere)
+    try {
+      val musicFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "$APP_ROOT_FOLDER_NAME/${folderType.folderName}")
+      if (musicFolder.exists()) {
+        musicFolder.listFiles()?.filter { it.isFile && it.length() > 0 }?.forEach {
+          if (seenPaths.add(it.name)) {
+            result.add(it)
+          }
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+
+    // 3. Buscar en directorio de app de versiones previas para retrocompatibilidad
+    try {
+      val externalDir = context.getExternalFilesDir(null)
+      if (externalDir != null) {
+        val legacyFolder = File(externalDir, "$APP_ROOT_FOLDER_NAME/${folderType.folderName}")
+        if (legacyFolder.exists()) {
+          legacyFolder.listFiles()?.filter { it.isFile && it.length() > 0 }?.forEach {
+            if (seenPaths.add(it.name)) {
+              result.add(it)
+            }
+          }
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+
+    return result.sortedByDescending { it.lastModified() }
+  }
+
+  /**
    * Retorna una ruta amigable y descriptiva para mostrar en la interfaz de usuario.
    */
   fun getDisplayPath(context: Context, folderType: AppAudioFolder): String {
-    return "Música / $APP_ROOT_FOLDER_NAME / ${folderType.folderName}"
+    return "Almacenamiento / Música / $APP_ROOT_FOLDER_NAME / ${folderType.folderName}"
   }
 
   /**

@@ -94,6 +94,236 @@ bool FFmpegBridge::processPcmGainNative(
     return true;
 }
 
+// Estructuras simples para reverberación Schroeder
+struct CombFilter {
+    std::vector<float> buffer;
+    size_t bufferIndex = 0;
+    float filterStore = 0.0f;
+    float feedback = 0.8f;
+    float damp = 0.2f;
+
+    void init(size_t size, float fb, float dm) {
+        buffer.assign(size, 0.0f);
+        bufferIndex = 0;
+        filterStore = 0.0f;
+        feedback = fb;
+        damp = dm;
+    }
+
+    float process(float input) {
+        float output = buffer[bufferIndex];
+        filterStore = (output * (1.0f - damp)) + (filterStore * damp);
+        buffer[bufferIndex] = input + (filterStore * feedback);
+        if (++bufferIndex >= buffer.size()) bufferIndex = 0;
+        return output;
+    }
+};
+
+struct AllpassFilter {
+    std::vector<float> buffer;
+    size_t bufferIndex = 0;
+    float feedback = 0.5f;
+
+    void init(size_t size, float fb = 0.5f) {
+        buffer.assign(size, 0.0f);
+        bufferIndex = 0;
+        feedback = fb;
+    }
+
+    float process(float input) {
+        float bufOut = buffer[bufferIndex];
+        float output = -input + bufOut;
+        buffer[bufferIndex] = input + (bufOut * feedback);
+        if (++bufferIndex >= buffer.size()) bufferIndex = 0;
+        return output;
+    }
+};
+
+bool FFmpegBridge::process8DSpatialNative(
+    const std::string& inputPcmPath,
+    const std::string& outputPcmPath,
+    int sampleRate,
+    int srcChannels,
+    float rotationSpeedHz,
+    int trajectoryType,
+    float spatialDepth,
+    float reverbRoomSize,
+    float reverbDamping,
+    float reverbWet
+) {
+    std::ifstream in(inputPcmPath, std::ios::binary);
+    if (!in.is_open()) {
+        LOGE("No se pudo abrir el archivo PCM de entrada para 8D: %s", inputPcmPath.c_str());
+        return false;
+    }
+
+    std::ofstream out(outputPcmPath, std::ios::binary);
+    if (!out.is_open()) {
+        LOGE("No se pudo crear el archivo PCM de salida para 8D: %s", outputPcmPath.c_str());
+        in.close();
+        return false;
+    }
+
+    if (sampleRate <= 0) sampleRate = 44100;
+    if (rotationSpeedHz <= 0.0f) rotationSpeedHz = 0.1f;
+    spatialDepth = std::clamp(spatialDepth, 0.1f, 1.0f);
+
+    // Inicializar filtros de delay para ITD (Interaural Time Difference: hasta 32 muestras)
+    constexpr size_t ITD_BUFFER_SIZE = 64;
+    std::vector<float> leftDelayBuf(ITD_BUFFER_SIZE, 0.0f);
+    std::vector<float> rightDelayBuf(ITD_BUFFER_SIZE, 0.0f);
+    size_t delayWriteIdx = 0;
+
+    // Filtros paso bajo para efecto de sombra de cabeza (Head shadow filter)
+    float lpfLeft = 0.0f;
+    float lpfRight = 0.0f;
+
+    // Configurar reverb si está activo
+    const bool useReverb = (reverbWet > 0.01f);
+    CombFilter combL[4], combR[4];
+    AllpassFilter allpassL[2], allpassR[2];
+    if (useReverb) {
+        float fb = 0.7f + (reverbRoomSize * 0.28f);
+        float dm = reverbDamping;
+        combL[0].init(static_cast<size_t>(sampleRate * 0.0297f), fb, dm);
+        combL[1].init(static_cast<size_t>(sampleRate * 0.0371f), fb, dm);
+        combL[2].init(static_cast<size_t>(sampleRate * 0.0411f), fb, dm);
+        combL[3].init(static_cast<size_t>(sampleRate * 0.0437f), fb, dm);
+
+        combR[0].init(static_cast<size_t>(sampleRate * 0.0313f), fb, dm);
+        combR[1].init(static_cast<size_t>(sampleRate * 0.0353f), fb, dm);
+        combR[2].init(static_cast<size_t>(sampleRate * 0.0397f), fb, dm);
+        combR[3].init(static_cast<size_t>(sampleRate * 0.0451f), fb, dm);
+
+        allpassL[0].init(static_cast<size_t>(sampleRate * 0.0051f), 0.5f);
+        allpassL[1].init(static_cast<size_t>(sampleRate * 0.0126f), 0.5f);
+        allpassR[0].init(static_cast<size_t>(sampleRate * 0.0057f), 0.5f);
+        allpassR[1].init(static_cast<size_t>(sampleRate * 0.0119f), 0.5f);
+    }
+
+    constexpr size_t CHUNK_SAMPLES = 2048;
+    std::vector<int16_t> inBuffer(CHUNK_SAMPLES);
+    std::vector<int16_t> outBuffer(CHUNK_SAMPLES * 2);
+
+    double currentPhase = 0.0;
+    const double phaseIncrement = (2.0 * M_PI * rotationSpeedHz) / static_cast<double>(sampleRate);
+
+    while (in.good()) {
+        in.read(reinterpret_cast<char*>(inBuffer.data()), CHUNK_SAMPLES * sizeof(int16_t));
+        std::streamsize bytesRead = in.gcount();
+        size_t samplesRead = bytesRead / sizeof(int16_t);
+        if (samplesRead == 0) break;
+
+        size_t frames = (srcChannels == 2) ? (samplesRead / 2) : samplesRead;
+        size_t outIndex = 0;
+
+        for (size_t f = 0; f < frames; ++f) {
+            float inL = 0.0f;
+            float inR = 0.0f;
+            if (srcChannels == 2) {
+                inL = inBuffer[f * 2] / 32768.0f;
+                inR = inBuffer[f * 2 + 1] / 32768.0f;
+            } else {
+                float mono = inBuffer[f] / 32768.0f;
+                inL = mono;
+                inR = mono;
+            }
+
+            // Calcular ángulo espacial según la trayectoria
+            double angle = currentPhase;
+            currentPhase += phaseIncrement;
+            if (currentPhase >= 2.0 * M_PI) currentPhase -= 2.0 * M_PI;
+
+            double azimuth = 0.0;
+            if (trajectoryType == 1) {
+                // Péndulo infinito: vaivén suave (-pi/2 a +pi/2)
+                azimuth = std::sin(angle) * (M_PI * 0.5);
+            } else if (trajectoryType == 2) {
+                // Expansión envolvente 3D con modulación
+                azimuth = angle;
+            } else {
+                // Orbital 360° clásico
+                azimuth = angle;
+            }
+
+            // Panning de potencia constante (Constant Power Panning)
+            double sinAzimuth = std::sin(azimuth);
+            double cosAzimuth = std::cos(azimuth);
+            double panNormalized = (sinAzimuth * spatialDepth + 1.0) * 0.5; // [0, 1]
+            panNormalized = std::clamp(panNormalized, 0.0, 1.0);
+
+            double gainLeft = std::cos(panNormalized * (M_PI * 0.5));
+            double gainRight = std::sin(panNormalized * (M_PI * 0.5));
+
+            // Simulación acústica trasera: cuando el sonido está detrás (cos < 0), atenuar levemente
+            if (cosAzimuth < 0.0) {
+                double backFactor = 1.0 + (cosAzimuth * 0.15 * spatialDepth);
+                gainLeft *= backFactor;
+                gainRight *= backFactor;
+            }
+
+            // ITD: Retardo interaural (hasta 20 muestras según el ángulo)
+            float itdSamples = static_cast<float>(sinAzimuth * 18.0 * spatialDepth);
+            leftDelayBuf[delayWriteIdx] = inL;
+            rightDelayBuf[delayWriteIdx] = inR;
+
+            float delayedL = inL;
+            float delayedR = inR;
+
+            if (itdSamples > 0.0f) {
+                // Sonido a la derecha: el oído izquierdo se retrasa
+                int delayInt = static_cast<int>(itdSamples);
+                size_t readIdx = (delayWriteIdx + ITD_BUFFER_SIZE - delayInt) % ITD_BUFFER_SIZE;
+                delayedL = leftDelayBuf[readIdx];
+            } else if (itdSamples < 0.0f) {
+                // Sonido a la izquierda: el oído derecho se retrasa
+                int delayInt = static_cast<int>(-itdSamples);
+                size_t readIdx = (delayWriteIdx + ITD_BUFFER_SIZE - delayInt) % ITD_BUFFER_SIZE;
+                delayedR = rightDelayBuf[readIdx];
+            }
+            delayWriteIdx = (delayWriteIdx + 1) % ITD_BUFFER_SIZE;
+
+            // Filtro de sombra de cabeza (Head shadow low-pass filter en oído opuesto)
+            float alphaL = (sinAzimuth > 0.0) ? (0.25f * static_cast<float>(sinAzimuth) * spatialDepth) : 0.0f;
+            float alphaR = (sinAzimuth < 0.0) ? (0.25f * static_cast<float>(-sinAzimuth) * spatialDepth) : 0.0f;
+
+            lpfLeft = (1.0f - alphaL) * delayedL + alphaL * lpfLeft;
+            lpfRight = (1.0f - alphaR) * delayedR + alphaR * lpfRight;
+
+            float spatL = static_cast<float>(lpfLeft * gainLeft);
+            float spatR = static_cast<float>(lpfRight * gainRight);
+
+            // Reverb binaural estéreo
+            if (useReverb) {
+                float revInL = (spatL + spatR) * 0.5f;
+                float revOutL = combL[0].process(revInL) + combL[1].process(revInL) + combL[2].process(revInL) + combL[3].process(revInL);
+                float revOutR = combR[0].process(revInL) + combR[1].process(revInL) + combR[2].process(revInL) + combR[3].process(revInL);
+                revOutL = allpassL[1].process(allpassL[0].process(revOutL));
+                revOutR = allpassR[1].process(allpassR[0].process(revOutR));
+
+                spatL = (spatL * (1.0f - reverbWet * 0.6f)) + (revOutL * reverbWet * 0.4f);
+                spatR = (spatR * (1.0f - reverbWet * 0.6f)) + (revOutR * reverbWet * 0.4f);
+            }
+
+            int32_t finalL = static_cast<int32_t>(std::round(spatL * 32767.0f));
+            int32_t finalR = static_cast<int32_t>(std::round(spatR * 32767.0f));
+
+            outBuffer[outIndex++] = static_cast<int16_t>(std::clamp(finalL, -32768, 32767));
+            outBuffer[outIndex++] = static_cast<int16_t>(std::clamp(finalR, -32768, 32767));
+        }
+
+        if (outIndex > 0) {
+            out.write(reinterpret_cast<const char*>(outBuffer.data()), outIndex * sizeof(int16_t));
+        }
+    }
+
+    in.close();
+    out.flush();
+    out.close();
+    LOGI("Procesamiento 8D Nativo C++ completado con éxito: %s", outputPcmPath.c_str());
+    return true;
+}
+
 bool FFmpegBridge::writeWavContainerNative(
     const std::string& inputPcmPath,
     const std::string& outputWavPath,

@@ -23,17 +23,27 @@ Este documento describe las fases de evolución técnica y funcional del proyect
 - [x] **Modo Extracción Directa (Ultra Rápida / Passthrough)** sin recodificación para contenedores compatibles.
 - [x] **Modo Conversión de Alta Fidelidad** con control de bitrate (hasta 320 kbps), calidad y ganancia de volumen.
 - [x] Análisis automático de metadatos de video (resolución, duración, miniatura de fotograma, códec de audio interno).
-- [x] Integración de llamadas nativas C++ (FFmpeg Core JNI) y Rust Bridge para demuxing y extracción de audio.
+- [x] Integración de llamadas nativas C++ y compilación obligatoria de Rust (`cargo-ndk`) para 4 arquitecturas ABI.
 - [x] **Sistema de Carpetas Accesibles en Almacenamiento**:
-  - Estructura automática `AudioConverter/` con subcarpetas `Convertir/`, `Video a Audio/`, `Recortar/`, `Fusionar/`, `Grabaciones/`.
+  - Estructura automática `AudioConverter/` con subcarpetas `Convertir/`, `Video a Audio/`, `Fusionar/`, `Recortar/`, `Grabaciones/`.
   - Integración transparente con `MediaStore` (Scoped Storage) para visibilidad inmediata en exploradores de archivos y reproductores.
   - Accesos directos y botones de exploración de carpetas desde la interfaz.
 
 ---
 
-## 📍 Fase 3: Edición y Herramientas Acústicas Avanzadas (En Progreso 🚧)
+## 📍 Fase 3: Unión Acústica, Audio Espacial 8D y Herramientas Avanzadas (En Progreso 🚧)
+- [x] **Herramienta: Unir Audios / Fusión de Pistas (Hasta 6 Pistas)**:
+  - Concatenación interactiva con reordenación de pistas y preescucha individual.
+  - Normalización DSP y remuestreo lineal ante diferencias de sample rate o canales.
+  - Micro-fundido suave (15ms crossfade anti-clics) en los puntos de empalme.
+  - Exportación automática a `Música/AudioConverter/Fusionar/` con registro en MediaStore.
+- [x] **Herramienta: Audio 8D Espacial (Holofónico 360° Binaural)**:
+  - Paneo orbital continuo con modulación LFO y trayectorias seleccionables (Circular 360°, Péndulo Infinito en 8, Expansión 3D).
+  - Simulación acústica binaural con cálculo de retardo interaural (ITD), efecto de sombra craneal (filtro paso bajo dependiente de azimut) y reverberación Schroeder.
+  - Radar orbital 360° interactivo para previsualizar visualmente la órbita del sonido alrededor de la cabeza.
+  - Aceleración nativa en C++ y Rust para procesamiento ultrarrápido sin sobrecalentamiento.
+  - Guardado directo en almacenamiento público visible (`Música/AudioConverter/Audio 8D/`).
 - [ ] Recortador visual de audio con selección de puntos de inicio y fin sobre la onda sonora y creador de tonos (carpeta `Recortar/`).
-- [ ] Unión / Fusión de múltiples pistas de audio en un único archivo (carpeta `Fusionar/`).
 - [ ] Ecualizador gráfico paramétrico de 10 bandas y refuerzo de graves (*Bass Boost*).
 - [ ] Editor de etiquetas ID3 / Metadatos (Título, Artista, Álbum, Año, Portada del álbum embebida).
 - [ ] Conversión en segundo plano mediante `WorkManager` y notificación persistente en la barra de estado.
@@ -41,6 +51,6 @@ Este documento describe las fases de evolución técnica y funcional del proyect
 ---
 
 ## 📍 Fase 4: Optimización y Distribución Externa 📲
-- [ ] Optimización de binarios nativos para arquitecturas `arm64-v8a`, `armeabi-v7a` y `x86_64`.
+- [x] Pipeline CI automatizado con GitHub Actions para compilación obligatoria de Rust (`cargo-ndk`) y C++ (`CMake`) con verificación estricta de librerías nativas `.so`.
 - [ ] Preparación y firma de APK optimizado para distribución directa en plataformas de terceros (Uptodown, descarga directa APK).
 - [ ] Modo oscuro / claro adaptativo automático según la configuración del sistema.

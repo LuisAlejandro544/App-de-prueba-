@@ -133,6 +133,9 @@ enum class AudioFormat(
     recommendedBitrateKbps = 192,
     isLossless = false
   );
+
+  val supportsBitrateCustomization: Boolean
+    get() = this != WAV && this != AIFF && this != FLAC
 }
 
 enum class QualityPreset(
@@ -167,7 +170,23 @@ data class AudioFileInfo(
   val bitrateKbps: Int,
   val artist: String? = null,
   val title: String? = null
-)
+) {
+  val formattedDuration: String
+    get() {
+      val totalSeconds = (durationMs / 1000).coerceAtLeast(0)
+      val minutes = totalSeconds / 60
+      val seconds = totalSeconds % 60
+      return "%02d:%02d".format(minutes, seconds)
+    }
+
+  val formattedSize: String
+    get() {
+      if (sizeBytes <= 0) return "0 KB"
+      val kb = sizeBytes / 1024.0
+      val mb = kb / 1024.0
+      return if (mb >= 1.0) "%.1f MB".format(mb) else "%.0f KB".format(kb)
+    }
+}
 
 data class ConversionOptions(
   val targetFormat: AudioFormat = AudioFormat.MP3,
@@ -190,7 +209,23 @@ data class ConvertedAudioFile(
   val sampleRate: Int,
   val channels: Int,
   val bitrateKbps: Int
-)
+) {
+  val formattedDuration: String
+    get() {
+      val totalSeconds = (durationMs / 1000).coerceAtLeast(0)
+      val minutes = totalSeconds / 60
+      val seconds = totalSeconds % 60
+      return "%02d:%02d".format(minutes, seconds)
+    }
+
+  val formattedSize: String
+    get() {
+      if (sizeBytes <= 0) return "0 KB"
+      val kb = sizeBytes / 1024.0
+      val mb = kb / 1024.0
+      return if (mb >= 1.0) "%.1f MB".format(mb) else "%.0f KB".format(kb)
+    }
+}
 
 enum class ConversionState {
   IDLE,

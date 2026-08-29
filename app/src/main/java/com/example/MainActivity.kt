@@ -21,14 +21,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.audio.AppStorageManager
 import com.example.ui.AudioConverterScreen
+import com.example.ui.AudioMergerScreen
 import com.example.ui.MainHubScreen
+import com.example.ui.Spatial8DScreen
 import com.example.ui.VideoToAudioScreen
 import com.example.ui.theme.MyApplicationTheme
 
 enum class AudioAppScreen {
   HUB,
   CONVERTER,
-  VIDEO_EXTRACTOR
+  VIDEO_EXTRACTOR,
+  SPATIAL_8D,
+  MERGER
 }
 
 class MainActivity : ComponentActivity() {
@@ -71,6 +75,12 @@ class MainActivity : ComponentActivity() {
                   },
                   onNavigateToVideoExtractor = {
                     currentScreen = AudioAppScreen.VIDEO_EXTRACTOR
+                  },
+                  onNavigateToSpatial8D = {
+                    currentScreen = AudioAppScreen.SPATIAL_8D
+                  },
+                  onNavigateToMerger = {
+                    currentScreen = AudioAppScreen.MERGER
                   }
                 )
               }
@@ -83,6 +93,20 @@ class MainActivity : ComponentActivity() {
               }
               AudioAppScreen.VIDEO_EXTRACTOR -> {
                 VideoToAudioScreen(
+                  onNavigateBack = {
+                    currentScreen = AudioAppScreen.HUB
+                  }
+                )
+              }
+              AudioAppScreen.SPATIAL_8D -> {
+                Spatial8DScreen(
+                  onNavigateBack = {
+                    currentScreen = AudioAppScreen.HUB
+                  }
+                )
+              }
+              AudioAppScreen.MERGER -> {
+                AudioMergerScreen(
                   onNavigateBack = {
                     currentScreen = AudioAppScreen.HUB
                   }

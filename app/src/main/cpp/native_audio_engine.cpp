@@ -68,6 +68,42 @@ Java_com_example_audio_NativeAudioBridge_processPcmGainNative(
 }
 
 JNIEXPORT jboolean JNICALL
+Java_com_example_audio_NativeAudioBridge_process8DSpatialNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jstring input_pcm_path,
+        jstring output_pcm_path,
+        jint sample_rate,
+        jint src_channels,
+        jfloat rotation_speed_hz,
+        jint trajectory_type,
+        jfloat spatial_depth,
+        jfloat reverb_room_size,
+        jfloat reverb_damping,
+        jfloat reverb_wet) {
+    const char* in_p = env->GetStringUTFChars(input_pcm_path, nullptr);
+    const char* out_p = env->GetStringUTFChars(output_pcm_path, nullptr);
+
+    bool success = g_ffmpeg_bridge.process8DSpatialNative(
+        in_p ? in_p : "",
+        out_p ? out_p : "",
+        sample_rate,
+        src_channels,
+        rotation_speed_hz,
+        trajectory_type,
+        spatial_depth,
+        reverb_room_size,
+        reverb_damping,
+        reverb_wet
+    );
+
+    if (in_p) env->ReleaseStringUTFChars(input_pcm_path, in_p);
+    if (out_p) env->ReleaseStringUTFChars(output_pcm_path, out_p);
+
+    return static_cast<jboolean>(success);
+}
+
+JNIEXPORT jboolean JNICALL
 Java_com_example_audio_NativeAudioBridge_writeWavNative(
         JNIEnv* env,
         jobject /* this */,

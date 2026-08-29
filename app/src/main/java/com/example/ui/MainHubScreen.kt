@@ -34,10 +34,13 @@ import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SpatialAudio
 import androidx.compose.material.icons.filled.Transform
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -73,6 +76,8 @@ import com.example.audio.AppStorageManager
 fun MainHubScreen(
   onNavigateToConverter: () -> Unit,
   onNavigateToVideoExtractor: () -> Unit = {},
+  onNavigateToSpatial8D: () -> Unit = {},
+  onNavigateToMerger: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   Scaffold(
@@ -121,7 +126,7 @@ fun MainHubScreen(
             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
           ) {
             Text(
-              text = "2 Disponibles",
+              text = "4 Disponibles",
               style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
               color = MaterialTheme.colorScheme.primary,
               modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -155,7 +160,7 @@ fun MainHubScreen(
           subtitle = "Aislar audio de MP4, MKV, WebM y grabaciones",
           description = "Extrae la pista de sonido de tus videos con opción de copia directa ultra rápida o conversión a MP3, AAC, FLAC y WAV manteniendo la máxima fidelidad acústica.",
           icon = Icons.Default.VideoLibrary,
-          badge = "Nuevo",
+          badge = "Disponible",
           gradientColors = listOf(
             Color(0xFF9C27B0),
             Color(0xFF673AB7)
@@ -163,6 +168,42 @@ fun MainHubScreen(
           tags = listOf("MP4/MKV a MP3", "Extracción Directa", "Zero Pérdida", "Ajuste de Ganancia"),
           onClick = onNavigateToVideoExtractor,
           testTag = "tool_card_video_extractor"
+        )
+      }
+
+      // Primary Tool Card 3: AUDIO 8D ESPACIAL
+      item {
+        ActiveToolCard(
+          title = "Audio 8D Espacial",
+          subtitle = "Sonido 360° binaural envolvente",
+          description = "Convierte cualquier canción o audio en una experiencia holofónica 8D. El sonido orbita suavemente alrededor de tu cabeza con retardos interaurales (ITD), sombra craneal y acústica de sala.",
+          icon = Icons.Default.SpatialAudio,
+          badge = "Nuevo",
+          gradientColors = listOf(
+            Color(0xFFE91E63),
+            Color(0xFF8E24AA)
+          ),
+          tags = listOf("Efecto 360°", "Binaural DSP", "Reverb de Sala", "🎧 Auriculares"),
+          onClick = onNavigateToSpatial8D,
+          testTag = "tool_card_spatial_8d"
+        )
+      }
+
+      // Primary Tool Card 4: UNIR AUDIOS (FUSIONAR)
+      item {
+        ActiveToolCard(
+          title = "Unir Audios",
+          subtitle = "Combina hasta 6 canciones o pistas en una sola",
+          description = "Une múltiples archivos de audio en el orden que desees. Incluye remuestreo acústico inteligente (DSP), balance de canales (Mono a Estéreo) y micro-fundido suave anti-chasquidos.",
+          icon = Icons.Default.Layers,
+          badge = "Disponible",
+          gradientColors = listOf(
+            Color(0xFF00897B),
+            Color(0xFF00ACC1)
+          ),
+          tags = listOf("Hasta 6 Pistas", "Reordenable", "Normalización DSP", "Anti-Chasquidos"),
+          onClick = onNavigateToMerger,
+          testTag = "tool_card_merger"
         )
       }
 
@@ -521,14 +562,14 @@ private fun ActiveToolCard(
         ),
         modifier = Modifier
           .fillMaxWidth()
-          .testTag("button_open_converter")
+          .testTag("button_open_${title.lowercase().replace(" ", "_")}")
       ) {
         Row(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.Center
         ) {
           Text(
-            text = "Abrir Herramienta Convertir",
+            text = "Abrir Herramienta $title",
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
           )
           Spacer(modifier = Modifier.width(8.dp))
@@ -689,7 +730,7 @@ private fun StorageFoldersCard(
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      AppAudioFolder.values().take(3).forEach { folder ->
+      AppAudioFolder.values().take(4).forEach { folder ->
         Surface(
           shape = RoundedCornerShape(10.dp),
           color = MaterialTheme.colorScheme.surface,

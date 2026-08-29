@@ -11,18 +11,35 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
   - Tarjetas detalladas de cada herramienta con título, descripción, insignias de estado y accesos directos.
   - Tarjeta de acceso directo y gestión de **Carpetas en tu Almacenamiento**.
 
-- **Sistema de Carpetas Accesibles para el Usuario (Almacenamiento Organizado)**:
-  - Organización automática de todos los archivos generados en una estructura de carpetas visibles y accesibles desde cualquier gestor de archivos (Google Files, Xiaomi, Samsung, Solid Explorer, etc.):
+- **Sistema de Carpetas Accesibles para el Usuario (Almacenamiento Organizado en Música)**:
+  - Organización automática de todos los archivos generados en una estructura de carpetas visibles y accesibles desde cualquier gestor de archivos (Google Files, Xiaomi, Samsung, Solid Explorer, etc.) ubicado en el almacenamiento público (`Música / AudioConverter`):
     ```
-    📁 Almacenamiento / Música / AudioConverter (Carpeta principal con el nombre provisional de la app)
+    📁 Almacenamiento Público / Música / AudioConverter
       ├── 📁 Convertir         -> Audios convertidos entre formatos (MP3, WAV, FLAC, M4A, etc.)
       ├── 📁 Video a Audio     -> Pistas de audio extraídas de videos (MP4, MKV, WebM, etc.)
+      ├── 📁 Audio 8D          -> Audios espaciales y holofónicos 360° con acústica binaural
+      ├── 📁 Fusionar          -> Pistas de audio combinadas y unificadas (hasta 6 pistas)
       ├── 📁 Recortar          -> Segmentos recortados y tonos de llamada
-      ├── 📁 Fusionar          -> Pistas de audio combinadas
       └── 📁 Grabaciones       -> Notas de voz y muestras
     ```
-  - **Indexación Inmediata en MediaStore**: Los audios exportados aparecen al instante en los reproductores de música y galerías del sistema.
+  - **Indexación Inmediata en MediaStore**: Los audios exportados aparecen al instante en los reproductores de música y galerías del sistema sin importar la versión de Android (incluyendo Android 11, 12, 13, 14+).
   - **Botón de Exploración Rápida**: Acceso directo desde la interfaz de la app para abrir la carpeta correspondiente en el gestor de archivos.
+
+- **Herramienta "Audio 8D Espacial" (Efecto Holofónico 360° con DSP Binaural)**:
+  - **Paneo Orbital Dinámico 360°**: Hace rotar el sonido continuamente alrededor de la cabeza del oyente creando una experiencia inmersiva para auriculares.
+  - **Cálculo de Retardo Temporal Interaural (ITD)**: Simula con precisión el tiempo que tarda la onda acústica en llegar de un oído a otro según el ángulo azimutal.
+  - **Filtro de Sombra Craneal (Head Shadow Effect)**: Atenúa y filtra las frecuencias agudas simulando la densidad acústica de la cabeza humana cuando la fuente de sonido está en el lado opuesto.
+  - **Simulación Acústica de Sala (Reverberación Schroeder)**: Añade profundidad espacial personalizable con presets (Estudio Intimista, Sala de Conciertos, Catedral Espaciosa o Desactivado).
+  - **Radar Orbital 360° Interactivo**: Visualizador gráfico en tiempo real que muestra la trayectoria orbital y la posición tridimensional de la fuente de sonido.
+  - **Aceleración Nativa Híbrida**: Procesamiento DSP de alto rendimiento acelerado en C++ (NDK) y Rust, con motor de reserva optimizado en Kotlin.
+  - **Exportación Flexible**: Salida a MP3, AAC/M4A, FLAC, WAV, OGG y OPUS con bitrates hasta 320 kbps y guardado en la carpeta pública `Audio 8D`.
+
+- **Herramienta "Unir Audios (Fusionar)" (Hasta 6 Pistas de Audio)**:
+  - **Concatenación Múltiple**: Permite seleccionar y fusionar de 2 hasta 6 pistas de audio en un solo archivo con orden reordenable interactivamente.
+  - **Normalización DSP Inteligente**: Resuelve heterogeneidades de frecuencia de muestreo (Sample Rate de 22.05k, 44.1k, 48k) y canales (Mono/Estéreo) mediante remuestreo acústico y unificación lineal a 2 canales sin desfases ni saltos de tono.
+  - **Micro-Fundido Suave Anti-Chasquidos (Crossfade)**: Aplica una interpolación suave de 15ms en los puntos de corte entre pistas para evitar clics y ruidos transitorios digitales.
+  - **Formatos de Salida Versátiles**: Exportación directa a MP3, M4A/AAC, WAV, FLAC, OGG y OPUS con selector de calidad y nombre personalizado.
+  - **Guardado Automático**: Almacenamiento directo en `Música/AudioConverter/Fusionar` y registro en MediaStore.
 
 - **Herramienta "Convertir" (12 formatos soportados)**:
   - **MP3**: Audio universal con compatibilidad total.
@@ -42,28 +59,17 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
   - **Demultiplexado Nativo y Rápido**: Aísla la pista de audio de contenedores de video sin procesar innecesariamente los fotogramas de video.
   - **Modo Extracción Directa (Ultra Rápida / Sin Pérdida)**: Copia el flujo de audio original en milisegundos sin recodificación si el contenedor y destino lo permiten.
   - **Modo Conversión de Alta Fidelidad**: Transcodifica el audio del video a formatos populares (MP3, AAC, FLAC, WAV, OGG, OPUS) con control de bitrate (hasta 320 kbps) y ajuste de volumen.
-  - **Detección Automática de Metadatos de Video**: Análisis inmediato de resolución (1080p, 4K, 720p), miniatura gráfica de fotograma, duración y códec de audio interno.
-  - **Guardado Automático**: Almacenamiento directo en la subcarpeta `Video a Audio` y exportación a la biblioteca pública.
+  - **Detección Automática de Metadatos de Video**: Análisis inmediato de resolución, miniatura gráfica, duración y códec interno.
+  - **Guardado Automático**: Almacenamiento directo en la subcarpeta `Video a Audio`.
 
 - **Protección de Fidelidad y Bloqueo Anti-Sobremuestreo (Anti-Bloat)**:
   - **Detección automática de metadatos**: Al cargar un archivo, se lee su tasa de bits real y frecuencia de muestreo de origen.
   - **Bloqueo preventivo de valores inflados**: Impide seleccionar bitrates o frecuencias mayores al origen, evitando la creación de archivos innecesariamente pesados sin ganancia acústica real.
-  - **Aviso pedagógico en formatos sin pérdida (Lossless)**: Alerta contextual al elegir WAV, FLAC o AIFF si el audio de entrada es comprimido (como MP3 o AAC), advirtiendo que no aumentará la calidad y solo multiplicará el espacio ocupado.
-
-- **Perfiles y Ajustes de Audio**:
-  - Perfiles rápidos: *Original*, *Ultra (320 kbps)*, *Alta (256 kbps)*, *Estándar (192 kbps)*, *Económico (128 kbps)* y *Voz (64 kbps)* con bloqueo dinámico de perfiles excedentes.
-  - Frecuencias de muestreo personalizables (48 kHz, 44.1 kHz, 32 kHz, 22.05 kHz) delimitadas al máximo del archivo de entrada.
-  - Selector de canales: Estéreo, Mono o conservación de canal original.
-  - Ganancia / Amplificador de volumen (desde 50% hasta 200%).
+  - **Aviso pedagógico en formatos sin pérdida (Lossless)**: Alerta contextual al elegir WAV, FLAC o AIFF si el audio de entrada es comprimido.
 
 - **Reproductor Integrado y Visualizador**:
-  - Mini reproductor con forma de onda de audio animada.
-  - Soporte para escuchar tanto el audio de origen como el archivo convertido final.
-
-- **Gestor de Audios y Exportación**:
-  - Historial de archivos convertidos clasificados por herramienta.
-  - Opción directa para compartir mediante cualquier aplicación instalada.
-  - Exportación con un toque a la carpeta pública de Música del dispositivo con rutas relativas limpias.
+  - Mini reproductor con barra de progreso interactiva y control de reproducción.
+  - Soporte para escuchar pistas individuales o el resultado final del audio unido.
 
 ---
 
@@ -72,7 +78,7 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
 - **UI & Framework**: Kotlin + Jetpack Compose + Material Design 3.
 - **Gestión de Almacenamiento**: `AppStorageManager` + `MediaStore API (Scoped Storage)` + `FileProvider`.
 - **Motor Nativo C++**: Android NDK + CMake (`libnative_audio_engine.so`) con puente JNI.
-- **Motor Rust DSP**: `audio_converter_core` con soporte para decodificación y resampling audiófilo.
+- **Motor Rust DSP**: `audio_converter_core` compilado obligatoriamente para 4 arquitecturas ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`).
 - **Arquitectura**: MVVM (Model-View-ViewModel) + StateFlow reactivo.
 
 ---
@@ -88,7 +94,7 @@ El repositorio incluye un flujo de trabajo de GitHub Actions (`.github/workflows
 2. Ve a la pestaña **Actions**.
 3. En la barra lateral izquierda, selecciona el flujo **Compilar APK Debug (Manual)**.
 4. Toca el botón **Run workflow** (Ejecutar flujo de trabajo) y confirma.
-5. El sistema descargará el código, instalará Android NDK, CMake, Rust toolchain con `cargo-ndk`, generará la keystore de firma y compilará el archivo APK.
+5. El sistema descargará el código, compilará Rust con `cargo-ndk`, compilará C++ con CMake, generará la keystore de firma y empaquetará el APK.
 6. Al finalizar la ejecución (en verde), ve a la sección **Artifacts** y descarga el archivo **AudioStudio-v1.0-Debug-APK** directamente en tu teléfono para instalarlo.
 
 ### Opción 2: Compilación Local
@@ -97,10 +103,4 @@ Para compilar el proyecto en modo depuración localmente:
 
 ```bash
 gradle assembleDebug
-```
-
-Para ejecutar las pruebas unitarias y de captura de interfaz:
-
-```bash
-gradle :app:testDebugUnitTest
 ```

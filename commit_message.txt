@@ -1,13 +1,24 @@
-feat: Animaciones morfológicas en bucle para conversión de audio y extracción de video
+feat: Implementar motor de Audio 8D Espacial y migración completa a almacenamiento público accesible
 
-- Implementado componente de animación fluida en Jetpack Compose (`MorphingConversionAnimation.kt`):
-  * `VideoToAudioMorphAnimation`: Animación en bucle con rotación elástica y transición suave de icono de Cámara/Video -> destellos de transmutación -> Nota Musical/Audio con barras de ecualizador dinámicas.
-  * `AudioToAudioMorphAnimation`: Animación en bucle con gradiente cónico giratorio, escala pulsante y espectro de frecuencias animado.
-- Reemplazado el indicador circular tradicional por las animaciones en los diálogos de progreso:
-  * `VideoExtractionProgressDialog.kt`: Integrado `VideoToAudioMorphAnimation`.
-  * `ConversionProgressDialog.kt`: Integrado `AudioToAudioMorphAnimation`.
-- Optimización y compilación nativa C++ (NDK/CMake) para procesamiento de audio:
-  * Motor de procesamiento DSP nativo en C++ (`libnative_audio_engine.so`) con ganancia, mezcla de canales y empaquetador WAV RIFF.
-  * Enlace JNI en `NativeAudioBridge.kt` para ejecución de alta fidelidad.
-  * Compatibilidad multi-arquitectura validada para `arm64-v8a`, `armeabi-v7a`, `x86` y `x86_64`.
-- Automatizado el flujo de GitHub Actions (`commit-changes.yml`) para sincronización continua con cada push.
+- **Herramienta de Audio 8D Espacial (`Spatial8DAudioProcessor.kt` & `Spatial8DViewModel.kt`)**:
+  * Paneo orbital continuo 360° con trayectorias espaciales configurables (Circular 360°, Péndulo en 8, Expansión 3D).
+  * Algoritmo de retardo temporal interaural (ITD) y filtro de sombra craneal (Head Shadow Effect) para una inmersión acústica binaural realista en auriculares.
+  * Módulo de reverberación Schroeder con presets acústicos de sala (Estudio, Concierto, Catedral o Desactivado).
+  * Aceleración nativa de bajo nivel en C++ (`ffmpeg_bridge.cpp`) y Rust (`audio_dsp.rs`) con fallback transparente en Kotlin.
+  * Exportación a múltiples formatos de audio (MP3, AAC/M4A, FLAC, WAV, OGG, OPUS) con control de bitrate hasta 320 kbps.
+
+- **Interfaz de Usuario y Radar Orbital Interactivo (`Spatial8DScreen.kt` & `SpatialOrbitalRadar.kt`)**:
+  * Componente `SpatialOrbitalRadar` con simulación gráfica en tiempo real de la posición angular, profundidad e intensidad sonora 360°.
+  * Tarjeta de configuración con selector de velocidad orbital, profundidad de campo sonoro, trayectoria y presets de reverberación.
+  * Generador integrado de audio de prueba armónico para experimentar el efecto 8D de inmediato sin necesidad de subir archivos.
+  * Diálogo de progreso en tiempo real (`Spatial8DProgressDialog.kt`) con visualización de fase, reproductor y opción para compartir.
+  * Integración en el menú principal (`MainHubScreen.kt`) y rutas de navegación (`MainActivity.kt`).
+
+- **Migración a Almacenamiento Público Accesible (`AppStorageManager.kt`)**:
+  * Almacenamiento directo en el directorio público de música del usuario (`Música / AudioConverter / ...`).
+  * Solución integral para Android 11+ (API 30+), garantizando que los archivos sean visibles y accesibles desde cualquier explorador de archivos (Google Files, Xiaomi, Samsung, Solid Explorer).
+  * Jerarquía de carpetas públicas dedicadas: `Convertir`, `Video a Audio`, `Audio 8D`, `Fusionar`, `Recortar` y `Grabaciones`.
+  * Integración con MediaStore API (Scoped Storage) para indexación instantánea en reproductores multimedia del sistema.
+
+- **Herramienta de Fusión de Audio (`AudioMerger.kt` & `AudioMergerViewModel.kt`)**:
+  * Selección, reordenación interactiva y unión de hasta 6 pistas simultáneas con normalización DSP y micro-fundido suave (15ms crossfade anti-chasquidos).

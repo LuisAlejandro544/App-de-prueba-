@@ -26,6 +26,18 @@ public:
     
     // Funciones reales de procesamiento DSP nativo en C++
     bool processPcmGainNative(const std::string& inputPcmPath, const std::string& outputPcmPath, int srcChannels, int dstChannels, float volumeGain);
+    bool process8DSpatialNative(
+        const std::string& inputPcmPath,
+        const std::string& outputPcmPath,
+        int sampleRate,
+        int srcChannels,
+        float rotationSpeedHz,
+        int trajectoryType,
+        float spatialDepth,
+        float reverbRoomSize,
+        float reverbDamping,
+        float reverbWet
+    );
     bool writeWavContainerNative(const std::string& inputPcmPath, const std::string& outputWavPath, int sampleRate, int channels, int bitsPerSample = 16);
     float calculatePcmRmsNative(const std::string& pcmPath);
 
