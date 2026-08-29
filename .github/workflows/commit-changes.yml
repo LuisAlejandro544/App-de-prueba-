@@ -24,41 +24,49 @@ jobs:
   commit-and-push:
     name: Confirmar y Guardar Cambios
     runs-on: ubuntu-latest
+    # Evita que el workflow se ejecute en bucle si el commit fue hecho por el bot
+    if: github.actor != 'github-actions[bot]'
     steps:
       - name: 📥 Clonar repositorio
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch_name || github.ref_name }}
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: ⚙️ Configurar identidad de Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: 📝 Determinar mensaje de commit
-        id: get_msg
+      - name: 🚀 Aplicar mensaje de commit y sincronizar
         run: |
+          TARGET_BRANCH="${{ inputs.branch_name || github.ref_name }}"
+          
+          # Verificar si commit_message.txt existe y no está vacío
           if [ -n "${{ inputs.commit_message }}" ]; then
-            echo "MSG<<EOF" >> $GITHUB_OUTPUT
-            echo "${{ inputs.commit_message }}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          elif [ -f "commit_message.txt" ]; then
-            echo "MSG<<EOF" >> $GITHUB_OUTPUT
-            cat commit_message.txt >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            MSG="${{ inputs.commit_message }}"
+          elif [ -f "commit_message.txt" ] && [ -s "commit_message.txt" ]; then
+            MSG=$(cat commit_message.txt)
           else
-            echo "MSG<<EOF" >> $GITHUB_OUTPUT
-            echo "chore: Actualización automática de código y recursos" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            MSG="chore: Actualización automática de código y recursos"
           fi
 
-      - name: 🚀 Agregar cambios y realizar commit
-        run: |
+          # Añadir cambios si los hay
           git add -A
-          if git diff --staged --quiet; then
-            echo "No hay cambios pendientes por confirmar."
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Evento Push detectado. Actualizando el último commit con el contenido de commit_message.txt..."
+            # Reescribir el commit con el mensaje exacto de commit_message.txt sin crear commits vacíos
+            git commit --amend -m "$MSG"
+            git push --force-with-lease origin "$TARGET_BRANCH"
           else
-            git commit -m "${{ steps.get_msg.outputs.MSG }}"
-            git push origin ${{ inputs.branch_name || github.ref_name }}
+            if git diff --staged --quiet; then
+              echo "No hay cambios pendientes. Actualizando mensaje del último commit..."
+              git commit --amend -m "$MSG"
+              git push --force-with-lease origin "$TARGET_BRANCH"
+            else
+              git commit -m "$MSG"
+              git push origin "$TARGET_BRANCH"
+            fi
           fi
+
