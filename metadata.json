@@ -1,0 +1,7 @@
+{
+  "name": "Audio Converter",
+  "description": "Convertidor de audio de alto rendimiento y extractor de audio de video con motor nativo C++/FFmpeg y Rust para MP3, WAV, M4A, FLAC, OGG, OPUS, WMA, AIFF, AMR, M4R, AC3 y MP2.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

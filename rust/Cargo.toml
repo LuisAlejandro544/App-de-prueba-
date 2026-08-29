@@ -1,0 +1,29 @@
+[package]
+name = "audio_converter_core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Audio Converter Team"]
+description = "High-performance Rust audio processing and transcoding engine"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# JNI bindings for Android Kotlin interop
+jni = { version = "0.21", default-features = false }
+
+# Pure Rust decoders and demuxers
+symphonia = { version = "0.5", default-features = false, features = ["all-codecs", "all-formats"] }
+
+# Audiophile-grade asynchronous resampler
+rubato = "0.14"
+
+# Safe multi-threaded concurrency
+parking_lot = "0.12"
+thiserror = "1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
