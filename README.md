@@ -16,6 +16,7 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
     ```
     📁 Almacenamiento Público / Música / AudioConverter
       ├── 📁 Convertir         -> Audios convertidos entre formatos (MP3, WAV, FLAC, M4A, etc.)
+      ├── 📁 Sin Silencio      -> Audios con pausas y silencios eliminados / acelerados (Smart Cut)
       ├── 📁 Video a Audio     -> Pistas de audio extraídas de videos (MP4, MKV, WebM, etc.)
       ├── 📁 Audio 8D          -> Audios espaciales y holofónicos 360° con acústica binaural
       ├── 📁 Fusionar          -> Pistas de audio combinadas y unificadas (hasta 6 pistas)
@@ -24,6 +25,20 @@ Audio Converter es una aplicación móvil nativa de conversión y procesamiento 
     ```
   - **Indexación Inmediata en MediaStore**: Los audios exportados aparecen al instante en los reproductores de música y galerías del sistema sin importar la versión de Android (incluyendo Android 11, 12, 13, 14+).
   - **Botón de Exploración Rápida**: Acceso directo desde la interfaz de la app para abrir la carpeta correspondiente en el gestor de archivos.
+
+- **Herramienta "Eliminar Silencios" (Smart Silence Remover & Voice Booster)**:
+  - **Detección Acústica por Niveles de Energía RMS (dB)**: Analiza el flujo de audio en bloques continuos para identificar con precisión quirúrgica momentos muertos, pausas de respiración y silencios entre oraciones.
+  - **Sensibilidad Configurable**: Tres niveles de umbral adaptados a cada tipo de audio:
+    - *Suave (-45 dB)*: Elimina únicamente silencios absolutos sin afectar susurros o palabras tenues.
+    - *Equilibrado (-35 dB)*: Ideal para notas de voz, conferencias, podcasts y audiolibros.
+    - *Agresivo (-25 dB)*: Elimina pausas breves y ruidos estáticos de fondo.
+  - **Duración Mínima de Silencio y Margen de Voz (Padding)**: Permite ajustar la pausa mínima requerida para cortar (150 ms a 1200 ms) y añade un margen de seguridad (Padding) de 20 ms a 150 ms para no recortar inicios o finales de palabras.
+  - **Modos de Acción Flexibles**:
+    - *Eliminar Silencios (100%)*: Suprime por completo los silencios empalmando las secciones de voz.
+    - *Acelerar Silencios (4x)*: Comprime las pausas a velocidad cuádruple sin cortar la continuidad del ambiente.
+  - **Micro-Fundidos Anti-Chasquidos**: Empalma las secciones con transiciones de audio suaves para evitar artefactos o clics digitales.
+  - **Ahorro de Tiempo en Pantalla**: Muestra el porcentaje exacto de tiempo ahorrado (ej. -35% de duración) y el número de pausas cortadas.
+  - **Almacenamiento Directo**: Guarda los resultados en la subcarpeta pública `Sin Silencio`.
 
 - **Herramienta "Audio 8D Espacial" (Efecto Holofónico 360° con DSP Binaural)**:
   - **Paneo Orbital Dinámico 360°**: Hace rotar el sonido continuamente alrededor de la cabeza del oyente creando una experiencia inmersiva para auriculares.

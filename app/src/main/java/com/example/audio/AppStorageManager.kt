@@ -29,6 +29,7 @@ enum class AppAudioFolder(val folderName: String, val displayName: String, val d
   CONVERTIR("Convertir", "Convertir", "Audios convertidos a otros formatos (MP3, WAV, FLAC, etc.)"),
   VIDEO_A_AUDIO("Video a Audio", "Video a Audio", "Pistas de audio extraídas de videos"),
   AUDIO_8D("Audio 8D", "Audio 8D", "Audios espaciales 3D / 8D inmersivos con rotación binaural"),
+  SIN_SILENCIO("Sin Silencio", "Sin Silencio", "Audios con silencios y pausas eliminadas automáticamente"),
   FUSIONAR("Fusionar", "Fusionar", "Pistas de audio combinadas"),
   RECORTAR("Recortar", "Recortar", "Segmentos recortados y tonos de llamada"),
   GRABACIONES("Grabaciones", "Grabaciones", "Audios grabados y muestras de prueba")

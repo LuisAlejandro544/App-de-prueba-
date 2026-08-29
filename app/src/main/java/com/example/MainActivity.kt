@@ -30,6 +30,7 @@ import com.example.ui.theme.MyApplicationTheme
 enum class AudioAppScreen {
   HUB,
   CONVERTER,
+  SILENCE_REMOVER,
   VIDEO_EXTRACTOR,
   SPATIAL_8D,
   MERGER
@@ -73,6 +74,9 @@ class MainActivity : ComponentActivity() {
                   onNavigateToConverter = {
                     currentScreen = AudioAppScreen.CONVERTER
                   },
+                  onNavigateToSilenceRemover = {
+                    currentScreen = AudioAppScreen.SILENCE_REMOVER
+                  },
                   onNavigateToVideoExtractor = {
                     currentScreen = AudioAppScreen.VIDEO_EXTRACTOR
                   },
@@ -86,6 +90,13 @@ class MainActivity : ComponentActivity() {
               }
               AudioAppScreen.CONVERTER -> {
                 AudioConverterScreen(
+                  onNavigateBack = {
+                    currentScreen = AudioAppScreen.HUB
+                  }
+                )
+              }
+              AudioAppScreen.SILENCE_REMOVER -> {
+                com.example.ui.SilenceRemoverScreen(
                   onNavigateBack = {
                     currentScreen = AudioAppScreen.HUB
                   }

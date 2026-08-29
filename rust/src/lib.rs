@@ -8,7 +8,7 @@ use jni::JNIEnv;
 /// Retorna la versión del motor de audio de Rust para Android
 #[no_mangle]
 pub extern "system" fn Java_com_example_audio_RustAudioBridge_getRustEngineVersion(
-    mut env: JNIEnv,
+    env: JNIEnv,
     _class: JClass,
 ) -> jstring {
     let version = "Rust Audio Engine v0.1.0 (Symphonia + Rubato DSP Architecture)";

@@ -19,6 +19,7 @@
 │   │   │   │   │   ├── AudioMetadataReader.kt # Extractor de metadatos y duración de audio
 │   │   │   │   │   ├── VideoMetadataReader.kt # Analizador de metadatos y miniaturas de video
 │   │   │   │   │   ├── VideoAudioExtractor.kt # Motor de demuxing, passthrough y extracción
+│   │   │   │   │   ├── SilenceRemoverProcessor.kt # Motor DSP de detección de energía RMS y corte de silencios
 │   │   │   │   │   ├── Spatial8DAudioProcessor.kt # Motor de audio espacial 8D y DSP holofónico
 │   │   │   │   │   ├── AudioMerger.kt         # Motor de unión acústica de hasta 6 pistas con DSP
 │   │   │   │   │   ├── AudioPlayerManager.kt  # Controlador de MediaPlayer y progreso
@@ -33,13 +34,15 @@
 │   │   │   │   ├── model/
 │   │   │   │   │   ├── AudioModels.kt   # Enums y Data Classes para conversión de audio
 │   │   │   │   │   ├── VideoModels.kt   # Modelos para análisis y extracción de video
+│   │   │   │   │   ├── SilenceModels.kt # Modelos para eliminación de silencios (umbrales, modos, métricas)
 │   │   │   │   │   ├── Spatial8DModels.kt # Modelos para audio 8D (trayectorias, presets, LFO)
 │   │   │   │   │   └── MergeModels.kt   # Modelos para unión de pistas, estado y progreso
 │   │   │   │   ├── ui/
-│   │   │   │   │   ├── MainHubScreen.kt         # Menú principal y explorador de carpetas
-│   │   │   │   │   ├── AudioConverterScreen.kt  # Pantalla de conversión con Tabs y Scaffold
+│   │   │   │   │   ├── MainHubScreen.kt         # Menú principal y explorador de carpetas (Orquestador)
+│   │   │   │   │   ├── AudioConverterScreen.kt  # Pantalla de conversión con Tabs y Scaffold (Orquestador)
+│   │   │   │   │   ├── SilenceRemoverScreen.kt  # Pantalla de eliminación inteligente de silencios (Orquestador)
 │   │   │   │   │   ├── VideoToAudioScreen.kt    # Pantalla de extracción de audio desde video
-│   │   │   │   │   ├── Spatial8DScreen.kt       # Pantalla de audio 8D espacial e interactiva
+│   │   │   │   │   ├── Spatial8DScreen.kt       # Pantalla de audio 8D espacial e interactiva (Orquestador)
 │   │   │   │   │   ├── AudioMergerScreen.kt     # Pantalla de unión de audios (hasta 6 pistas)
 │   │   │   │   │   ├── components/              # Componentes modulares Jetpack Compose
 │   │   │   │   │   │   ├── AudioPlayerCard.kt
@@ -49,9 +52,26 @@
 │   │   │   │   │   │   ├── ConvertedFilesList.kt
 │   │   │   │   │   │   ├── FormatSelectorSection.kt
 │   │   │   │   │   │   ├── QualitySelectorSection.kt
+│   │   │   │   │   │   ├── hub/                 # Componentes modulares del Menú Principal
+│   │   │   │   │   │   │   ├── HubHeader.kt           # Header principal y Hero Banner
+│   │   │   │   │   │   │   ├── ActiveToolCard.kt      # Tarjetas interactivas de herramientas activas
+│   │   │   │   │   │   │   ├── UpcomingToolCard.kt    # Tarjetas de herramientas del roadmap
+│   │   │   │   │   │   │   └── StorageFoldersCard.kt  # Explorador de carpetas y pie de privacidad
+│   │   │   │   │   │   ├── silence/             # Componentes modulares de Eliminar Silencios
+│   │   │   │   │   │   │   ├── SilenceSettingsCard.kt   # Selector de umbrales dB, pausas mínimas y padding
+│   │   │   │   │   │   │   └── SilenceProgressDialog.kt # Diálogo de progreso con métricas de ahorro
+│   │   │   │   │   │   ├── converter/           # Componentes modulares de Conversión de Audio
+│   │   │   │   │   │   │   ├── ConverterHeader.kt              # Header con Tabs y selector de vistas
+│   │   │   │   │   │   │   ├── ConverterSelectFileCard.kt      # Tarjeta de selección y formatos soportados
+│   │   │   │   │   │   │   ├── ConverterSelectedAudioCard.kt   # Tarjeta de archivo seleccionado con reproductor
+│   │   │   │   │   │   │   └── ConverterCustomFileNameCard.kt  # Campo para nombre de archivo resultante
 │   │   │   │   │   │   ├── spatial/             # Componentes modulares de Audio 8D
-│   │   │   │   │   │   │   ├── SpatialOrbitalRadar.kt    # Radar visual 360° en tiempo real
-│   │   │   │   │   │   │   └── Spatial8DProgressDialog.kt# Diálogo de procesamiento y reproductor
+│   │   │   │   │   │   │   ├── SpatialOrbitalRadar.kt            # Radar visual 360° en tiempo real
+│   │   │   │   │   │   │   ├── SpatialAudioSourceCard.kt         # Selector y vista previa de pista origen
+│   │   │   │   │   │   │   ├── SpatialTrajectorySettingsCard.kt  # Configuración de trayectoria, velocidad y reverb
+│   │   │   │   │   │   │   ├── SpatialExportSettingsCard.kt      # Formato de salida, bitrate y nombre
+│   │   │   │   │   │   │   ├── SpatialHistorySection.kt          # Lista e items de audios 8D procesados
+│   │   │   │   │   │   │   └── Spatial8DProgressDialog.kt        # Diálogo de procesamiento y reproductor
 │   │   │   │   │   │   ├── merge/               # Componentes desacoplados de Unión de Audios
 │   │   │   │   │   │   │   ├── MergeTrackCard.kt
 │   │   │   │   │   │   │   ├── MergeSummaryCard.kt
@@ -92,7 +112,7 @@
 ├── ROADMAP.md                           # Hoja de ruta del proyecto
 ├── STRUCTURE.md                         # Este archivo con el árbol de componentes y almacenamiento
 ├── AI_CONTEXT.md                        # Contexto para asistentes de inteligencia artificial
-├── commit_message.txt                   # Registro del último commit en español
+├── commit_message.txt                   # Registro de commits en español
 └── AGENTS.md                            # Directrices e instrucciones para agentes de desarrollo
 ```
 
