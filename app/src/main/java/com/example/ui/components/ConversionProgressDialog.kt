@@ -96,21 +96,12 @@ fun ConversionProgressDialog(
       ) {
         when (progress.state) {
           ConversionState.PREPARING, ConversionState.DECODING, ConversionState.ENCODING, ConversionState.SAVING -> {
-            Box(
-              modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-              contentAlignment = Alignment.Center
-            ) {
-              CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 4.dp
-              )
-            }
+            AudioToAudioMorphAnimation(
+              size = 80,
+              modifier = Modifier.padding(bottom = 6.dp)
+            )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
               text = "Convirtiendo Audio",

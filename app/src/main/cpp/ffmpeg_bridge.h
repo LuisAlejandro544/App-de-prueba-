@@ -23,6 +23,12 @@ public:
     bool initialize();
     bool convertAudio(const std::string& inputPath, const std::string& outputPath, const AudioFormatConfig& config);
     bool extractAudioFromVideo(const std::string& videoPath, const std::string& outputAudioPath, const AudioFormatConfig& config);
+    
+    // Funciones reales de procesamiento DSP nativo en C++
+    bool processPcmGainNative(const std::string& inputPcmPath, const std::string& outputPcmPath, int srcChannels, int dstChannels, float volumeGain);
+    bool writeWavContainerNative(const std::string& inputPcmPath, const std::string& outputWavPath, int sampleRate, int channels, int bitsPerSample = 16);
+    float calculatePcmRmsNative(const std::string& pcmPath);
+
     std::string getEngineVersion() const;
     std::vector<std::string> getSupportedCodecs() const;
 

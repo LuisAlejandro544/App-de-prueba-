@@ -42,6 +42,69 @@ Java_com_example_audio_NativeAudioBridge_getNativeSupportedCodecs(
 }
 
 JNIEXPORT jboolean JNICALL
+Java_com_example_audio_NativeAudioBridge_processPcmGainNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jstring input_pcm_path,
+        jstring output_pcm_path,
+        jint src_channels,
+        jint dst_channels,
+        jfloat volume_gain) {
+    const char* in_p = env->GetStringUTFChars(input_pcm_path, nullptr);
+    const char* out_p = env->GetStringUTFChars(output_pcm_path, nullptr);
+
+    bool success = g_ffmpeg_bridge.processPcmGainNative(
+        in_p ? in_p : "",
+        out_p ? out_p : "",
+        src_channels,
+        dst_channels,
+        volume_gain
+    );
+
+    if (in_p) env->ReleaseStringUTFChars(input_pcm_path, in_p);
+    if (out_p) env->ReleaseStringUTFChars(output_pcm_path, out_p);
+
+    return static_cast<jboolean>(success);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_example_audio_NativeAudioBridge_writeWavNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jstring input_pcm_path,
+        jstring output_wav_path,
+        jint sample_rate,
+        jint channels,
+        jint bits_per_sample) {
+    const char* in_p = env->GetStringUTFChars(input_pcm_path, nullptr);
+    const char* out_p = env->GetStringUTFChars(output_wav_path, nullptr);
+
+    bool success = g_ffmpeg_bridge.writeWavContainerNative(
+        in_p ? in_p : "",
+        out_p ? out_p : "",
+        sample_rate,
+        channels,
+        bits_per_sample
+    );
+
+    if (in_p) env->ReleaseStringUTFChars(input_pcm_path, in_p);
+    if (out_p) env->ReleaseStringUTFChars(output_wav_path, out_p);
+
+    return static_cast<jboolean>(success);
+}
+
+JNIEXPORT jfloat JNICALL
+Java_com_example_audio_NativeAudioBridge_calculatePcmRmsNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jstring pcm_path) {
+    const char* p_path = env->GetStringUTFChars(pcm_path, nullptr);
+    float rms = g_ffmpeg_bridge.calculatePcmRmsNative(p_path ? p_path : "");
+    if (p_path) env->ReleaseStringUTFChars(pcm_path, p_path);
+    return rms;
+}
+
+JNIEXPORT jboolean JNICALL
 Java_com_example_audio_NativeAudioBridge_convertNative(
         JNIEnv* env,
         jobject /* this */,

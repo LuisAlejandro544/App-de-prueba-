@@ -18,25 +18,40 @@
 │   │   │   │   │   ├── AppStorageManager.kt   # Gestor de carpetas y subcarpetas accesibles
 │   │   │   │   │   ├── AudioMetadataReader.kt # Extractor de metadatos y duración de audio
 │   │   │   │   │   ├── VideoMetadataReader.kt # Analizador de metadatos y miniaturas de video
-│   │   │   │   │   ├── VideoAudioExtractor.kt # Motor de demuxing y extracción de audio de video
+│   │   │   │   │   ├── VideoAudioExtractor.kt # Motor de demuxing, passthrough y extracción
 │   │   │   │   │   ├── AudioPlayerManager.kt  # Controlador de MediaPlayer y progreso
-│   │   │   │   │   ├── AudioTranscoder.kt     # Pipeline de decodificación y transcodificación
+│   │   │   │   │   ├── AudioTranscoder.kt     # Orquestador del pipeline de transcodificación
 │   │   │   │   │   ├── NativeAudioBridge.kt   # Conexión JNI con librería C++ / FFmpeg
-│   │   │   │   │   └── RustAudioBridge.kt     # Conexión JNI con librería Rust
+│   │   │   │   │   ├── RustAudioBridge.kt     # Conexión JNI con librería Rust
+│   │   │   │   │   └── codec/                 # Submódulo modular de bajo nivel (Códecs y DSP)
+│   │   │   │   │       ├── PcmDecoder.kt          # Decodificador universal MediaCodec / MediaExtractor
+│   │   │   │   │       ├── PcmDspProcessor.kt     # Procesador DSP: ganancia, mezcla de canales y remuestreo
+│   │   │   │   │       ├── WavEncoder.kt          # Generador de cabeceras y flujo RIFF WAVE
+│   │   │   │   │       └── MediaCodecEncoder.kt   # Codificador por hardware AAC, FLAC y Opus
 │   │   │   │   ├── model/
 │   │   │   │   │   ├── AudioModels.kt   # Enums y Data Classes para conversión de audio
 │   │   │   │   │   └── VideoModels.kt   # Modelos para análisis y extracción de video
 │   │   │   │   ├── ui/
 │   │   │   │   │   ├── MainHubScreen.kt         # Menú principal y explorador de carpetas
 │   │   │   │   │   ├── AudioConverterScreen.kt  # Pantalla de conversión con Tabs y Scaffold
-│   │   │   │   │   ├── VideoToAudioScreen.kt    # Pantalla de extracción de audio desde video
+│   │   │   │   │   ├── VideoToAudioScreen.kt    # Pantalla modular de extracción de audio desde video
 │   │   │   │   │   ├── components/              # Componentes modulares Jetpack Compose
 │   │   │   │   │   │   ├── AudioPlayerCard.kt
 │   │   │   │   │   │   ├── AudioWaveformVisualizer.kt
+│   │   │   │   │   │   ├── MorphingConversionAnimation.kt # Animación en bucle de video a audio / audio a audio
 │   │   │   │   │   │   ├── ConversionProgressDialog.kt
 │   │   │   │   │   │   ├── ConvertedFilesList.kt
 │   │   │   │   │   │   ├── FormatSelectorSection.kt
-│   │   │   │   │   │   └── QualitySelectorSection.kt
+│   │   │   │   │   │   ├── QualitySelectorSection.kt
+│   │   │   │   │   │   └── video/               # Componentes desacoplados de Video a Audio
+│   │   │   │   │   │       ├── VideoSelectPlaceholder.kt
+│   │   │   │   │   │       ├── SelectedVideoCard.kt
+│   │   │   │   │   │       ├── ExtractionModeSelector.kt
+│   │   │   │   │   │       ├── VideoTargetFormatSection.kt
+│   │   │   │   │   │       ├── VideoQualitySettingsSection.kt
+│   │   │   │   │   │       ├── CustomFileNameSection.kt
+│   │   │   │   │   │       ├── ExtractedFileCard.kt
+│   │   │   │   │   │       └── VideoExtractionProgressDialog.kt
 │   │   │   │   │   └── theme/           # Paleta de colores M3, tipografía y tema
 │   │   │   │   │       ├── Color.kt
 │   │   │   │   │       ├── Theme.kt
@@ -61,6 +76,7 @@
 ├── ROADMAP.md                           # Hoja de ruta del proyecto
 ├── STRUCTURE.md                         # Este archivo con el árbol de componentes y almacenamiento
 ├── AI_CONTEXT.md                        # Contexto para asistentes de inteligencia artificial
+├── commit_message.txt                   # Registro del último commit en español
 └── AGENTS.md                            # Directrices e instrucciones para agentes de desarrollo
 ```
 
