@@ -53,8 +53,10 @@
 │   │   │   │   │   │   ├── FormatSelectorSection.kt
 │   │   │   │   │   │   ├── QualitySelectorSection.kt
 │   │   │   │   │   │   ├── hub/                 # Componentes modulares del Menú Principal
+│   │   │   │   │   │   │   ├── HubModels.kt           # Modos de visualización (Grid, Lista, Detallada) y datos
+│   │   │   │   │   │   │   ├── HubViewModeSelector.kt # Selector de vista con botones de alternancia
 │   │   │   │   │   │   │   ├── HubHeader.kt           # Header principal y Hero Banner
-│   │   │   │   │   │   │   ├── ActiveToolCard.kt      # Tarjetas interactivas de herramientas activas
+│   │   │   │   │   │   │   ├── ActiveToolCard.kt      # Tarjetas interactivas (Cuadrícula, Fila compacta y Detallada)
 │   │   │   │   │   │   │   ├── UpcomingToolCard.kt    # Tarjetas de herramientas del roadmap
 │   │   │   │   │   │   │   └── StorageFoldersCard.kt  # Explorador de carpetas y pie de privacidad
 │   │   │   │   │   │   ├── silence/             # Componentes modulares de Eliminar Silencios

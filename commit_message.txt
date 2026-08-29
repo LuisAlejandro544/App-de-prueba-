@@ -1,59 +1,18 @@
-feat: Implementación de la herramienta Eliminar Silencios (Smart Silence Remover)
+feat: Implementación de Selector de Vista en el Menú Principal (Cuadrícula, Lista Compacta y Detallada)
 
-- **Motor DSP de Detección Acústica (`SilenceRemoverProcessor.kt` & `SilenceModels.kt`)**:
-  * Implementación de análisis en bloque de energía RMS en escala decibelios (dB) con ventanas continuas de 25 ms.
-  * Tres niveles de sensibilidad preconfigurados: Suave (-45 dB), Equilibrado (-35 dB) y Agresivo (-25 dB).
-  * Control interactivo de duración mínima de silencio (150ms a 1200ms) y margen de voz (Padding de 20ms a 150ms) para proteger articulaciones de palabras.
-  * Dos modos de acción: Supresión total de silencios (100%) y Aceleración cuádruple de pausas (4x) con micro-fundidos anti-chasquidos (Crossfade).
-  * Soporte de exportación a MP3, AAC/M4A, FLAC, WAV, OGG y OPUS con bitrates personalizables.
+- **Selector de Vista Interactivo (`HubViewModeSelector.kt` & `HubModels.kt`)**:
+  * Creación del componente de alternancia rápida estilo segmented control en la barra de herramientas.
+  * Tres modos de visualización seleccionables:
+    - **Cuadrícula (Grid)**: Tarjetas visuales de 2 columnas altamente compactas, mostrando 4 a 6 herramientas en pantalla sin scroll excesivo.
+    - **Lista Compacta (List)**: Filas horizontales delgadas estilo explorador/ajustes con navegación directa.
+    - **Detallada (Detailed)**: Tarjetas expandidas con explicaciones completas, etiquetas técnicas y botón de acción.
+  * Persistencia del estado seleccionado mediante `rememberSaveable`.
 
-- **Interfaz de Usuario y Componentes Modulares (`SilenceRemoverScreen.kt` & `ui/components/silence/`)**:
-  * `SilenceSettingsCard.kt`: Tarjeta de configuración interactiva con chips de umbral, sliders para pausas/padding y selector de modo.
-  * `SilenceProgressDialog.kt`: Diálogo de estado con barra de progreso, métricas precisas de porcentaje de tiempo ahorrado (-X%) y mini-reproductor integrado.
-  * Soporte para generación de muestra de audio sintética de prueba ("Muestra Demo") para probar el algoritmo inmediatamente.
+- **Componentes Modulares de Tarjetas (`ActiveToolCard.kt`)**:
+  * `ActiveToolGridCard`: Tarjeta optimizada para cuadrícula de 2 columnas con icono en gradiente, títulos de tamaño balanceado, badge destacado y área táctil completa de acceso directo.
+  * `ActiveToolListRow`: Fila horizontal delgada y limpia con indicador visual y chevron de navegación.
+  * `ActiveToolCard`: Mantenimiento de la tarjeta detallada original con tags y flujo completo.
 
-- **Integración y Almacenamiento Organizado (`AppStorageManager.kt`, `MainHubScreen.kt` & `MainActivity.kt`)**:
-  * Nueva subcarpeta pública `Sin Silencio` en `Música/AudioConverter/Sin Silencio` con indexación en MediaStore.
-  * Tarjeta dedicada en el Menú Principal con etiqueta "Nuevo", insignias de características y navegación fluida.
-
----
-
-refactor: Modularización de MainHubScreen, Spatial8DScreen y AudioConverterScreen
-
-- **Modularización del Menú Principal (`MainHubScreen.kt` & `ui/components/hub/`)**:
-  * Se desacopló `MainHubScreen.kt` (reduciendo de 791 a 186 líneas).
-  * Se crearon los componentes modulares:
-    - `HubHeader.kt`: Encabezado principal con indicador offline y banner hero de bienvenida.
-    - `ActiveToolCard.kt`: Tarjeta interactiva y estilizada para las herramientas disponibles (Convertir, Extraer, Audio 8D, Unir).
-    - `UpcomingToolCard.kt`: Tarjetas de herramientas del roadmap en desarrollo.
-    - `StorageFoldersCard.kt`: Explorador de carpetas públicas y pie de privacidad y procesamiento local.
-
-- **Modularización de la Pantalla de Audio 8D (`Spatial8DScreen.kt` & `ui/components/spatial/`)**:
-  * Se desacopló `Spatial8DScreen.kt` (reduciendo de 731 a 240 líneas).
-  * Se crearon los componentes modulares:
-    - `SpatialAudioSourceCard.kt`: Selector de audio origen, generación de muestra demo y preescucha de pista.
-    - `SpatialTrajectorySettingsCard.kt`: Selector de trayectoria espacial, velocidad orbital, profundidad binaural 3D y reverb acústico.
-    - `SpatialExportSettingsCard.kt`: Selector de formatos de salida, bitrate y nombre personalizado.
-    - `SpatialHistorySection.kt`: Encabezado con acceso directo a carpeta, estado vacío y tarjetas de audios 8D creados con mini-reproductor integrado.
-
-- **Modularización de la Pantalla de Conversión (`AudioConverterScreen.kt` & `ui/components/converter/`)**:
-  * Se desacopló `AudioConverterScreen.kt` (reduciendo de 652 a 180 líneas).
-  * Se crearon los componentes modulares:
-    - `ConverterHeader.kt`: Encabezado de la herramienta con navegación hacia atrás y selector de pestañas (Convertir / Mis Audios).
-    - `ConverterSelectFileCard.kt`: Selector de archivo inicial e información de formatos de audio compatibles.
-    - `ConverterSelectedAudioCard.kt`: Visualizador del archivo seleccionado con metadatos técnicos y mini-reproductor embebido.
-    - `ConverterCustomFileNameCard.kt`: Campo estilizado para personalizar el nombre de salida.
-
-- **Actualización de Documentación (`STRUCTURE.md`)**:
-  * Se actualizó la estructura del proyecto reflejando los nuevos subdirectorios y componentes modulares creados en `ui/components/hub/`, `ui/components/spatial/` y `ui/components/converter/`.
-
----
-
-fix: Corregir compilación cruzada de Rust con cargo-ndk en GitHub Actions
-
-- **Resolución de Error en `cargo-ndk` (`build-debug-apk.yml`)**:
-  * Se corrigió la ruta de ejecución entrando directamente al subdirectorio `rust` antes de invocar `cargo ndk`. Esto soluciona el fallo donde `cargo metadata` no encontraba el archivo `Cargo.toml` en la raíz del repositorio.
-  * Se direccionó la salida compilada hacia `../app/src/main/jniLibs` para que las librerías nativas (`libaudio_converter_core.so`) se ubiquen correctamente en las 4 arquitecturas ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`).
-
-- **Limpieza de Advertencias en Rust (`rust/src/lib.rs`)**:
-  * Se eliminó el modificador innecesario `mut` en el parámetro `env: JNIEnv` de `getRustEngineVersion`, resolviendo el warning del compilador `#[warn(unused_mut)]`.
+- **Integración y Arquitectura (`MainHubScreen.kt` & `STRUCTURE.md`)**:
+  * Refactorización del layout principal para soportar renderizado dinámico en cuadrícula emparejada (`chunked(2)`) y listas sin colisiones de scroll.
+  * Actualización de la documentación arquitectónica en `STRUCTURE.md`.
